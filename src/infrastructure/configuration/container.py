@@ -1,5 +1,5 @@
 from src.adapters.out.ai.sklearn_context_predictor import SklearnContextPredictor
-from src.adapters.out.ai.generador_borrador_mock import GeneradorBorradorMock
+from src.adapters.out.ai.generador_borrador_ollama import GeneradorBorradorOllama
 from src.adapters.out.persistence.catalogo_repository_memory import CatalogoRepositoryMemory
 from src.adapters.out.persistence.informe_repository_memory import InformeRepositoryMemory
 from src.adapters.out.persistence.memoria import Memoria
@@ -29,18 +29,44 @@ class Container:
         self.predicciones = PrediccionRepositoryMemory(self.memoria)
         self.informes = InformeRepositoryMemory(self.memoria)
         self.catalogos = CatalogoRepositoryMemory()
-        self.servicios = ServiciosSolicitud(self.solicitudes, self.plantillas, self.predicciones,
-                                            self.catalogos, self.memoria)
+
+        self.servicios = ServiciosSolicitud(
+            self.solicitudes,
+            self.plantillas,
+            self.predicciones,
+            self.catalogos,
+            self.memoria
+        )
+
         self.crear_solicitud = CrearSolicitud(self.servicios)
         self.obtener_solicitud = ObtenerSolicitud(self.servicios)
         self.actualizar_solicitud = ActualizarSolicitud(self.servicios)
         self.guardar_valores = GuardarValoresSolicitud(self.servicios)
+
         self.predecir_contexto = PredecirContexto(
-                self.servicios,
-                SklearnContextPredictor()
-            )
+            self.servicios,
+            SklearnContextPredictor()
+        )
+
         self.validar_prediccion = ValidarPrediccion(self.servicios)
-        self.generar_borrador = GenerarBorrador(self.servicios, self.informes, GeneradorBorradorMock())
-        self.obtener_informe = ObtenerInforme(self.servicios, self.informes)
-        self.actualizar_borrador = ActualizarBorrador(self.servicios, self.informes)
-        self.consultar_catalogos = ConsultarCatalogos(self.catalogos, self.plantillas)
+
+        self.generar_borrador = GenerarBorrador(
+            self.servicios,
+            self.informes,
+            GeneradorBorradorOllama()
+        )
+
+        self.obtener_informe = ObtenerInforme(
+            self.servicios,
+            self.informes
+        )
+
+        self.actualizar_borrador = ActualizarBorrador(
+            self.servicios,
+            self.informes
+        )
+
+        self.consultar_catalogos = ConsultarCatalogos(
+            self.catalogos,
+            self.plantillas
+        )
