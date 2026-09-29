@@ -4,6 +4,7 @@ from contextlib import nullcontext
 import socket
 import sys
 from pathlib import Path
+from uuid import UUID
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import httpx
@@ -13,7 +14,15 @@ from scripts.verificar_auth_supabase import backend, check, VerificationError
 
 
 def run(data):
-    identifier = data['solicitud']['id']
+    raw_identifier = data["solicitud"]["id"]
+
+    if not isinstance(raw_identifier, str):
+        raise VerificationError("Identificador no válido")
+    try:
+        identifier = str(UUID(raw_identifier))
+    except (ValueError, AttributeError):
+        raise VerificationError("Identificador no válido") from None
+    
     expected = data['solicitud']
     db = DatabaseSettings.from_env()
     with db.connect() as c:
