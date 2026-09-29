@@ -16,6 +16,8 @@ class AreaMunicipal:
     codigo: str | None
     nombre: str
     activo: bool = True
+    area_padre_id: UUID | None = None
+    descripcion: str | None = None
 
 
 @dataclass(frozen=True)

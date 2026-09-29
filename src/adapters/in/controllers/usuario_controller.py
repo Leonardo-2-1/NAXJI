@@ -13,9 +13,14 @@ class UsuarioResponse(ResponseModel):
     roles: frozenset[Rol]
     area_id: UUID | None
     activo: bool
+    email: str | None = None
+    nombres: str | None = None
+    apellidos: str | None = None
+    cargo: str | None = None
+    area_nombre: str | None = None
 
 
-router = APIRouter(tags=["Usuario de prueba"], responses=RESPUESTAS_ERROR)
+router = APIRouter(tags=["Usuario"], responses=RESPUESTAS_ERROR)
 
 
 @router.get("/auth/me", response_model=UsuarioResponse)

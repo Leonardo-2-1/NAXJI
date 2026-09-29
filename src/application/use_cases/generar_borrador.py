@@ -42,6 +42,13 @@ class GenerarBorrador:
             contexto = ContextoConfirmado(solicitud.tipo_informe_id, solicitud.area_destino_id,
                                            tuple(n.normativa_id for n in p.normativas if n.aceptada))
             resultado = self.generador.generar(solicitud.asunto, plantilla, datos, contexto, instrucciones)
+            areas = {a.id: a.nombre for a in self.s.catalogos.areas()}
+            resultado.contenido['encabezado'] = {
+                'asunto': solicitud.asunto,
+                'area_origen': areas.get(solicitud.area_origen_id),
+                'area_destino': areas.get(solicitud.area_destino_id),
+                'autor_id': str(solicitud.usuario_id),
+            }
             validar_contenido(resultado.contenido)
             informe = Informe(solicitud.id, plantilla.id, usuario.id, titulo=solicitud.asunto)
             informe.versiones.append(VersionInforme(

@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { login, USUARIOS_DEMO } from "../services/authService";
+import { login, obtenerUsuarioActual, USUARIOS_DEMO } from "../services/authService";
+import { authConfig } from "../services/session";
 import { mensajeError } from "../services/api";
 
 function Login() {
@@ -10,10 +11,27 @@ function Login() {
   const [usuario, setUsuario] = useState("demo-funcionario");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
+  const [config, setConfig] = useState(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  if (localStorage.getItem("token") && localStorage.getItem("usuario")) {
-    return <Navigate to="/nuevo-informe" replace />;
-  }
+  useEffect(() => {
+    let active = true;
+    authConfig().then(async (data) => {
+      if (!active) return;
+      setConfig(data);
+      try {
+        await obtenerUsuarioActual();
+        if (active) navigate("/nuevo-informe", { replace: true });
+      } catch (err) {
+        if (active && ![401, 403].includes(err.response?.status)) {
+          setError(mensajeError(err, "No se pudo comprobar la sesión."));
+        }
+      }
+    }).catch((err) => { if (active) setError(mensajeError(err, "No se pudo cargar el acceso.")); });
+    return () => { active = false; };
+  }, [navigate]);
+  const demo = config?.mode === "mock" && config?.persistence === "memory";
 
   const iniciarSesion = async (e) => {
     e.preventDefault();
@@ -22,7 +40,7 @@ function Login() {
     setError("");
 
     try {
-      await login(usuario);
+      await login({ email, password, demoToken: usuario });
       navigate("/nuevo-informe");
     } catch (err) {
       setError(
@@ -32,6 +50,7 @@ function Login() {
         )
       );
     } finally {
+      setPassword("");
       setCargando(false);
     }
   };
@@ -48,6 +67,7 @@ function Login() {
         </p>
 
         <form onSubmit={iniciarSesion}>
+          {demo ? <>
           <div className="form-group">
             <label>Identidad de demostración</label>
 
@@ -64,18 +84,29 @@ function Login() {
           </div>
 
           <p className="hint-text">
-            El backend de PMV 1 no usa contraseña. El valor seleccionado se
-            envía como token Bearer, igual que en Swagger.
+            Acceso de demostración con datos temporales.
           </p>
+          </> : <>
+            <div className="form-group">
+              <label htmlFor="email">Correo electrónico</label>
+              <input id="email" type="email" autoComplete="username" required value={email}
+                onChange={(e) => setEmail(e.target.value)} disabled={cargando} />
+            </div>
+            <div className="form-group">
+              <label htmlFor="password">Contraseña</label>
+              <input id="password" type="password" autoComplete="current-password" required value={password}
+                onChange={(e) => setPassword(e.target.value)} disabled={cargando} />
+            </div>
+          </>}
 
           {error && <p className="error-message">{error}</p>}
 
-          <button className="btn-primary" type="submit" disabled={cargando}>
+          <button className="btn-primary" type="submit" disabled={cargando || !config || config.mode === "disabled"}>
             {cargando ? "Ingresando..." : "Iniciar sesión"}
           </button>
         </form>
 
-        <p className="demo-text">Acceso de demostración - PMV 1</p>
+        <p className="demo-text">{demo ? "Acceso de demostración - PMV 1" : "Acceso institucional - NAXJI"}</p>
       </div>
     </div>
   );

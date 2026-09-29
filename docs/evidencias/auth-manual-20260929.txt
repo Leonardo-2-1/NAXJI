@@ -1,0 +1,51 @@
+Transcripción de las salidas relevantes de la prueba con login manual en Edge.
+No incluye contraseñas, claves, tokens ni identificadores de sesión.
+
+LOGIN_REACT_SUPABASE_Y_PERFIL_A: OK
+COOKIE_HTTPONLY_Y_TOKEN_EN_MEMORIA_A: OK
+LOGIN_REACT_SUPABASE_Y_PERFIL_B: OK
+COOKIE_HTTPONLY_Y_TOKEN_EN_MEMORIA_B: OK
+Dos_cuentas_existentes_distintas: OK
+Backend_real_iniciado: OK
+Auth_me_funcionario_A: OK
+Perfil_y_rol_PostgreSQL_A: OK
+Auth_me_funcionario_B: OK
+Perfil_y_rol_PostgreSQL_B: OK
+FastAPI_creacion_solicitud_A: OK
+Persistencia_SQL_datos_y_propietario: OK
+A_recupera_solicitud: OK
+B_lectura_ajena_denegada_403: OK
+B_modificacion_ajena_denegada_403: OK
+B_puede_operar_solicitud_propia: OK
+HTTP_identidad_y_roles_no_manipulables_422: OK
+HTTP_sin_autoasignacion_admin_405: OK
+A_actualiza_solicitud_propia: OK
+Token_no_verificado_rechazado_401: OK
+Token_no_verificado_rechazado_401: OK
+RLS_Data_API_JWT_real_A: OK
+RLS_Data_API_JWT_real_B: OK
+Backend_real_iniciado: OK
+Backend_proceso_anterior_finalizado_y_reiniciado: OK
+Persistencia_despues_reinicio: OK
+Aislamiento_conservado_despues_reinicio: OK
+Renovacion_sesion_cookie_HttpOnly: OK
+Access_token_renovado_valido: OK
+Cierre_sesion_Supabase: OK
+Sesion_cerrada_no_se_renueva: OK
+Solicitudes_temporales_eliminadas: OK
+Cuentas_perfiles_roles_y_contrasenas_conservados: OK
+AUTH_PERSISTENCIA_AISLAMIENTO: COMPROBADOS
+
+El paso posterior del verificador de navegador no terminó correctamente:
+VERIFICACION_MANUAL_NO_COMPLETADA; revisar el último paso informado, sin datos privados.
+
+El fallo ocurrió después de terminar la verificación del backend, al intentar
+cerrar las sesiones de las páginas. El mensaje original no registró su causa
+concreta. Se añadió identificación de fase y se hizo tolerante a páginas que
+ya hayan vuelto al login. No se repitió todo el login manual después de ese ajuste.
+
+La comprobación aislada de React con respuestas simuladas produjo:
+UI_LOGIN_SIMULADO: OK
+UI_LOGOUT_SIMULADO: OK
+
+Estas últimas dos líneas no se presentan como una segunda prueba de Supabase real.

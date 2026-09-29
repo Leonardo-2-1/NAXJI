@@ -1,5 +1,7 @@
 import api from "./api";
 
+export const obtenerContexto = async (id) => (await api.get(`/solicitudes/${id}/contexto`)).data;
+
 export const predecirContexto = async (solicitudId) => {
   const response = await api.post(
     `/solicitudes/${solicitudId}/predecir-contexto`

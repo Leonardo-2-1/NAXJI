@@ -11,7 +11,9 @@ class GeneradorBorradorMock(GeneradorBorrador):
             contenido={
                 "antecedentes": datos.get("antecedentes", ""),
                 "desarrollo": f"BORRADOR MOCK — {asunto}. {datos.get('detalle', '')}",
-                "conclusiones": "Texto de demostración; requiere elaboración y revisión humana.",
+                "objetivo": datos.get("objetivo", ""),
+                "conclusiones": datos.get("conclusiones", "Texto de demostración; requiere elaboración y revisión humana."),
+                "recomendaciones": datos.get("recomendaciones", ""),
                 "plantilla": plantilla.nombre,
                 "datos": datos,
                 "contexto": {

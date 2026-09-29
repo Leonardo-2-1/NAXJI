@@ -1,13 +1,20 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 import { etiquetaUsuario, logout } from "../services/authService";
+import { mensajeError } from "../services/api";
 
 function Header() {
   const navigate = useNavigate();
+  const [error, setError] = useState("");
 
-  const cerrarSesion = () => {
-    logout();
-    navigate("/");
+  const cerrarSesion = async () => {
+    try {
+      await logout();
+      navigate("/");
+    } catch (err) {
+      setError(mensajeError(err, "No se pudo cerrar la sesión. Inténtelo nuevamente."));
+    }
   };
 
   return (
@@ -19,6 +26,7 @@ function Header() {
 
       <div className="header-user">
         <span>{etiquetaUsuario()}</span>
+        {error && <span role="alert">{error}</span>}
 
         <button type="button" onClick={cerrarSesion}>
           Cerrar sesión

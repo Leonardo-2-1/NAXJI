@@ -5,3 +5,5 @@ pytest>=8.3,<10.0
 httpx>=0.27,<1.0
 scikit-learn==1.6.1
 joblib
+psycopg[binary]>=3.2,<4
+python-dotenv>=1,<2

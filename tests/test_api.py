@@ -37,7 +37,7 @@ def test_flujo_completo_swagger_y_catalogos(client):
     assert client.get("/health").json() == {"status": "ok", "service": "NAXJI API"}
     assert client.get("/docs").status_code == 200
     assert len(client.get("/tipos-informe").json()) == 4
-    assert len(client.get("/areas").json()) == 2
+    assert len(client.get("/areas").json()) == 6
     assert client.get("/auth/me").json()["roles"] == ["FUNCIONARIO"]
     schema = client.get("/openapi.json").json()
     assert "/solicitudes/{solicitud_id}/validar-prediccion" in schema["paths"]

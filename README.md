@@ -1,28 +1,52 @@
 # NAXJI — Copilot Municipal: backend PMV1
 
-API FastAPI con arquitectura hexagonal, persistencia en memoria y adaptadores de IA **mock**.
+API FastAPI con arquitectura hexagonal, React, PostgreSQL y Supabase Auth.
 Permite crear una solicitud, confirmar/corregir contexto, completar una plantilla,
-generar un borrador y guardar ediciones como versiones. El SQL proporcionado se usa
-como referencia y no se ejecuta ni modifica.
+generar un borrador y guardar ediciones como versiones. El predictor ejecuta RF-IA-01
+con correspondencias de catálogo; el generador de borradores sigue siendo **mock**.
+La plantilla técnica piloto es demostrativa, no un formato municipal aprobado.
+
+Estado y evidencias: [catálogos PMV1](docs/IMPLEMENTACION_CATALOGOS_PMV1.md) y
+[autenticación/persistencia](docs/VERIFICACION_SUPABASE.md).
 
 ## Ejecutar en Windows / PowerShell
 
 Requiere Python 3.11 o superior. Desde la raíz del repositorio:
 
 ```powershell
+# Solo si el entorno todavía no existe:
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m uvicorn src.main:app --reload
+$env:NAXJI_PERSISTENCE_MODE = 'postgres'
+$env:NAXJI_AUTH_MODE = 'supabase'
+$env:NAXJI_AUTH_COOKIE_SECURE = 'false' # Solo desarrollo HTTP local
+.\.venv\Scripts\python.exe -m uvicorn src.main:app --host 127.0.0.1 --port 8000
 ```
 
 - Salud: http://127.0.0.1:8000/health
 - Swagger: http://127.0.0.1:8000/docs
 - OpenAPI: http://127.0.0.1:8000/openapi.json
 
-Use **un solo proceso/worker** en la demo: cada proceso tiene memoria independiente.
-Reiniciar o recargar el servidor elimina solicitudes, predicciones e informes.
+Configure las variables privadas según `.env.example` en su `.env` local excluido
+de Git. No sobrescriba un `.env` existente. PostgreSQL conserva datos al reiniciar.
+En otra terminal: `npm.cmd ci` y `npm.cmd run dev -- --host 127.0.0.1 --port 5173`.
+Abra http://127.0.0.1:5173 e inicie sesión con su cuenta Supabase existente.
 
-## Usuario temporal y roles
+Carga inicial, con vista previa y verificación de idempotencia:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/cargar_catalogos.py
+# Después de revisar las inserciones:
+.\.venv\Scripts\python.exe scripts/cargar_catalogos.py --apply
+```
+
+La carga ya fue aplicada en este proyecto; repetirla no duplica registros.
+Guarde el enlace `/nuevo-informe?solicitud=UUID` para recuperar el formulario.
+
+## Modo de pruebas en memoria (opcional)
+
+Solo para pruebas: `NAXJI_PERSISTENCE_MODE=memory` y `NAXJI_AUTH_MODE=mock`.
+En ese modo los datos sí se pierden al reiniciar y cada proceso tiene su memoria.
 
 En Swagger pulse **Authorize** e introduzca `demo-funcionario` (sin escribir `Bearer`).
 En Postman use `Authorization: Bearer demo-funcionario`.
@@ -36,9 +60,8 @@ En Postman use `Authorization: Bearer demo-funcionario`.
 | `demo-admin` | Elaborar y acceder a todos los recursos de la demo |
 
 Estos valores son selectores de identidades ficticias, **no credenciales ni sesiones reales**.
-No se crean usuarios ni se almacenan contraseñas. Inicio, cierre de sesión y validación
-de JWT corresponden a Supabase Auth y quedan pendientes. El futuro adaptador deberá
-reemplazar `get_current_user` y resolver perfiles/roles verificados.
+Estos tokens solo funcionan en modo de pruebas. PostgreSQL usa Supabase Auth,
+con sesión real, perfil y roles consultados en el backend. No cree cuentas duplicadas.
 
 Configuración opcional antes de iniciar el servidor:
 
@@ -52,16 +75,17 @@ $env:NAXJI_CORS_ORIGINS = "http://localhost:5173"
 de la demo está en `autorizar`; debe acordarse con el equipo antes de producción.
 CORS queda cerrado salvo los orígenes configurados.
 
-## Demo completa en Swagger / Postman
+## Flujo de borradores en Swagger / Postman
 
 1. Consulte `GET /tipos-informe` y `GET /areas`. Los cuatro códigos de tipo provienen
-   del SQL; UUID, áreas, plantillas y normativa son fixtures ficticias.
+   de PostgreSQL en modo real; los fixtures ficticios solo corresponden al modo memoria.
 2. Cree `POST /solicitudes` con `{"asunto":"Inspección de un parque"}`.
    Guarde el `id` devuelto. Puede incluir tipo, áreas y plantilla desde este paso.
 3. Consulte y edite mediante `GET /solicitudes/{id}` y `PUT /solicitudes/{id}`.
    El PUT actualiza solo los campos enviados; las referencias admiten `null`.
 4. Ejecute `POST /solicitudes/{id}/predecir-contexto`, sin cuerpo.
-   La respuesta identifica `es_mock: true`, el modelo ficticio y las confianzas de prueba.
+   La respuesta identifica el predictor configurado y sus advertencias. Sus confianzas
+   no acreditan precisión institucional validada.
 5. Confirme con `POST /solicitudes/{id}/validar-prediccion`:
 
    ```json
@@ -75,8 +99,8 @@ CORS queda cerrado salvo los orígenes configurados.
    original; `GET /solicitudes/{id}` muestra el tipo/área finalmente confirmados.
 6. Consulte `GET /plantillas?tipo_informe_id=UUID_CONFIRMADO`.
    Seleccione una con `PUT /solicitudes/{id}` y `{"plantilla_id":"UUID_PLANTILLA"}`.
-   Si seleccionó una plantilla antes de predecir, el contexto confirmado debe
-   coincidir con su tipo; de lo contrario quite/cambie la plantilla o corrija el contexto.
+   Si la confirmación cambia tipo/destino y vuelve incompatible la plantilla,
+   la API despeja esa plantilla y sus valores; seleccione nuevamente el formato.
 7. Consulte `GET /plantillas/{plantilla_id}/campos` y copie los IDs de los campos
    `antecedentes` y `detalle`. Guarde:
 
@@ -122,8 +146,11 @@ El flujo anterior también se verifica automáticamente en `tests/test_api.py`.
 | Método | Ruta | Uso |
 |---|---|---|
 | GET | `/health` | Estado, sin autenticación |
-| GET | `/auth/me` | Identidad temporal actual |
+| GET | `/auth/me` | Identidad y roles verificados según modo configurado |
 | POST | `/solicitudes` | Crear; devuelve 201 |
+| POST | `/solicitudes/completa` | Crear formulario completo y valores en una transacción |
+| PUT | `/solicitudes/{solicitud_id}/completa` | Guardado completo; rollback si faltan obligatorios |
+| GET | `/solicitudes/{solicitud_id}/contexto` | Recuperar última predicción; control de propietario |
 | GET | `/solicitudes/{solicitud_id}` | Consultar |
 | PUT | `/solicitudes/{solicitud_id}` | Modificar campos o cancelar |
 | PUT | `/solicitudes/{solicitud_id}/valores` | Guardar valores de plantilla |
@@ -131,7 +158,7 @@ El flujo anterior también se verifica automáticamente en `tests/test_api.py`.
 | GET | `/areas` | Catálogo de áreas |
 | GET | `/plantillas` | Plantillas activas; filtro opcional por tipo |
 | GET | `/plantillas/{plantilla_id}/campos` | Campos activos ordenados |
-| POST | `/solicitudes/{solicitud_id}/predecir-contexto` | Predicción mock |
+| POST | `/solicitudes/{solicitud_id}/predecir-contexto` | Sugerencia desde asunto; requiere confirmación |
 | POST | `/solicitudes/{solicitud_id}/validar-prediccion` | Confirmar/corregir/rechazar |
 | POST | `/solicitudes/{solicitud_id}/generar-borrador` | Generar mock; devuelve 201 |
 | GET | `/informes/{informe_id}` | Consultar la última versión |
@@ -163,7 +190,10 @@ Errores: 400 reglas/datos de negocio, 401 sin autenticación, 403 permiso/propie
 
 Se cubren casos de uso, validaciones, contratos mock, control por rol/propietario,
 concurrencia de generación, rollback, versiones, endpoints, Swagger, CORS e imports.
-`httpx` se utiliza en TestClient; no se realizan llamadas a servicios externos en las pruebas.
+`httpx` se utiliza en TestClient. Para incluir pruebas reales PostgreSQL:
+`$env:NAXJI_RUN_DB_TESTS='1'` antes de pytest. Las pruebas Auth con contraseñas en
+archivo son opcionales; la alternativa manual es
+`node scripts/verificar_catalogos_navegador.cjs` (requiere Playwright en `venv/ui-check`).
 Con las versiones instaladas, Starlette emite un aviso de deprecación de su uso de
 httpx en TestClient; las pruebas pasan. No se añadió otro cliente HTTP por ese aviso.
 
@@ -172,10 +202,9 @@ httpx en TestClient; las pruebas pasan. No se añadió otro cliente HTTP por ese
 Consulte [docs/CONTRATOS_PMV1.md](docs/CONTRATOS_PMV1.md) y el
 [inventario de entrega](docs/ENTREGA_PMV1.md).
 
-- Frontend React: consumir OpenAPI, catálogos, solicitudes, contexto y edición de informes.
-- Base de datos: implementar los repositorios y la unidad de trabajo con Supabase/PostgreSQL.
-- Auth: sustituir la dependencia temporal por verificación de Supabase Auth y lectura de perfil/roles.
-- RF-IA-01: implementar `ContextPredictor`, con IDs de catálogos reales y confianzas.
+- React, repositorios PostgreSQL, unidad de trabajo y Supabase Auth están integrados.
+- RF-IA-01: pendientes validación experimental institucional, categorías sin correspondencia
+  y curación jurídica de etiquetas normativas. No se reentrenó el modelo.
 - LLM: implementar `GeneradorBorrador` con plantilla, datos, contexto e instrucciones.
 
 El `OllamaAdapter` y `LLMPort` que ya existían en el commit remoto se conservan sin

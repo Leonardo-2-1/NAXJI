@@ -1,0 +1,1544 @@
+--- antes/database/seeds/pmv1_catalogos.sql
++++ despues/database/seeds/pmv1_catalogos.sql
+@@ -0,0 +1,74 @@
++-- NAXJI PMV1. Solo inserciones; no modifica registros existentes.
++-- Fuente: ROF 2020 publicado actualmente por MDT, art. 6 (pp. 7-8), organigrama p. 67.
++-- https://cdn.www.gob.pe/uploads/document/file/4258543/MDT_ROF_2020.pdf.pdf
++-- Índice vigente consultado 2026-09-29:
++-- https://transparencia.gob.pe/enlaces/pte_transparencia_enlaces.aspx?id_entidad=11090&id_tema=5&ver=
++-- Los códigos MDT_* son identificadores de NAXJI, no códigos oficiales del ROF.
++-- BEGIN/COMMIT pertenecen al archivo para ejecución SQL independiente.
++BEGIN;
++SELECT pg_advisory_xact_lock(20260929, 1);
++DO $$ BEGIN
++  IF (SELECT count(*) FROM public.tipos_informe WHERE activo AND codigo IN
++      ('INFORME_TECNICO','INFORME_LEGAL','INFORME_INSPECCION','MEMORANDO')) <> 4 THEN
++    RAISE EXCEPTION 'Se requieren los cuatro tipos PMV1 activos; no se alteraron registros';
++  END IF;
++END $$;
++
++INSERT INTO public.areas_municipales(codigo,nombre,descripcion)
++VALUES ('MDT_CONCEJO','Concejo Municipal','ROF 2020, art. 6 y p. 67. Fuente oficial: https://cdn.www.gob.pe/uploads/document/file/4258543/MDT_ROF_2020.pdf.pdf ; consulta 2026-09-29. Catálogo parcial.')
++ON CONFLICT(codigo) DO NOTHING;
++INSERT INTO public.areas_municipales(codigo,nombre,area_padre_id,descripcion)
++SELECT 'MDT_ALCALDIA','Alcaldía',id,'ROF 2020, pp. 7 y 67; fuente y fecha de consulta en database/seeds/pmv1_catalogos.sql.'
++FROM public.areas_municipales WHERE codigo='MDT_CONCEJO'
++ON CONFLICT(codigo) DO NOTHING;
++INSERT INTO public.areas_municipales(codigo,nombre,area_padre_id,descripcion)
++SELECT 'MDT_GM','Gerencia Municipal',id,'ROF 2020, pp. 7 y 67; fuente y fecha de consulta en database/seeds/pmv1_catalogos.sql.'
++FROM public.areas_municipales WHERE codigo='MDT_ALCALDIA'
++ON CONFLICT(codigo) DO NOTHING;
++INSERT INTO public.areas_municipales(codigo,nombre,area_padre_id,descripcion)
++SELECT v.codigo,v.nombre,p.id,'ROF 2020, pp. 7-8 y 67; fuente y fecha de consulta en database/seeds/pmv1_catalogos.sql.'
++FROM (VALUES
++ ('MDT_GSP','Gerencia de Servicios Públicos'),
++ ('MDT_GDT','Gerencia de Desarrollo Territorial'),
++ ('MDT_GDE','Gerencia de Desarrollo Económico'),
++ ('MDT_GAJ','Gerencia de Asesoría Jurídica')
++) AS v(codigo,nombre)
++JOIN public.areas_municipales p ON p.codigo='MDT_GM'
++ON CONFLICT(codigo) DO NOTHING;
++INSERT INTO public.areas_municipales(codigo,nombre,area_padre_id,descripcion)
++SELECT v.codigo,v.nombre,p.id,'ROF 2020, pp. 8 y 67; fuente y fecha de consulta en database/seeds/pmv1_catalogos.sql.'
++FROM (VALUES
++ ('MDT_SGGA','Subgerencia de Gestión Ambiental','MDT_GSP'),
++ ('MDT_SGDUR','Subgerencia de Desarrollo Urbano y Rural','MDT_GDT')
++) AS v(codigo,nombre,padre)
++JOIN public.areas_municipales p ON p.codigo=v.padre
++ON CONFLICT(codigo) DO NOTHING;
++
++INSERT INTO public.normativas(codigo,titulo,tipo,numero,fecha_publicacion,
++ fecha_inicio_vigencia,fecha_fin_vigencia,url_fuente,descripcion,activo)
++VALUES ('MDT_ROF_2020','Reglamento de Organización y Funciones de la Municipalidad Distrital de El Tambo – ROF 2020',
++ 'REGLAMENTO',NULL,NULL,NULL,NULL,
++ 'https://cdn.www.gob.pe/uploads/document/file/4258543/MDT_ROF_2020.pdf.pdf',
++ 'Documento oficial publicado y enlazado por MDT y Transparencia al 2026-09-29. Fechas jurídicas no verificadas: NULL no acredita vigencia. Activo significa disponible en el catálogo documental. No se equipara a etiquetas normativas del modelo IA.',true)
++ON CONFLICT(codigo) WHERE codigo IS NOT NULL DO NOTHING;
++
++INSERT INTO public.plantillas(nombre,tipo_informe_id,version,descripcion)
++SELECT 'Informe Técnico – Piloto NAXJI',id,1,
++ 'DEMOSTRACIÓN PMV1. No constituye formato oficial aprobado por MDT. Asunto y áreas se obtienen de la solicitud; autor del perfil autenticado. Revisión humana obligatoria.'
++FROM public.tipos_informe WHERE codigo='INFORME_TECNICO' AND activo
++ON CONFLICT(nombre,version) DO NOTHING;
++
++INSERT INTO public.campos_plantilla(plantilla_id,clave,etiqueta,tipo_dato,obligatorio,orden,configuracion)
++SELECT p.id,v.clave,v.etiqueta,v.tipo,v.obligatorio,v.orden,'{}'::jsonb
++FROM (VALUES
++ ('referencia_documento','Número o referencia del documento','text',false,1),
++ ('fecha','Fecha','date',true,2),
++ ('antecedentes','Antecedentes','textarea',true,3),
++ ('objetivo','Objetivo del informe','textarea',true,4),
++ ('detalle','Análisis técnico','textarea',true,5),
++ ('conclusiones','Conclusiones','textarea',true,6),
++ ('recomendaciones','Recomendaciones','textarea',true,7)
++) AS v(clave,etiqueta,tipo,obligatorio,orden)
++JOIN public.plantillas p ON p.nombre='Informe Técnico – Piloto NAXJI' AND p.version=1
++ON CONFLICT(plantilla_id,clave) DO NOTHING;
++COMMIT;
+--- antes/README.md
++++ despues/README.md
+@@ -1,28 +1,52 @@
+ # NAXJI — Copilot Municipal: backend PMV1
+ 
+-API FastAPI con arquitectura hexagonal, persistencia en memoria y adaptadores de IA **mock**.
++API FastAPI con arquitectura hexagonal, React, PostgreSQL y Supabase Auth.
+ Permite crear una solicitud, confirmar/corregir contexto, completar una plantilla,
+-generar un borrador y guardar ediciones como versiones. El SQL proporcionado se usa
+-como referencia y no se ejecuta ni modifica.
++generar un borrador y guardar ediciones como versiones. El predictor ejecuta RF-IA-01
++con correspondencias de catálogo; el generador de borradores sigue siendo **mock**.
++La plantilla técnica piloto es demostrativa, no un formato municipal aprobado.
++
++Estado y evidencias: [catálogos PMV1](docs/IMPLEMENTACION_CATALOGOS_PMV1.md) y
++[autenticación/persistencia](docs/VERIFICACION_SUPABASE.md).
+ 
+ ## Ejecutar en Windows / PowerShell
+ 
+ Requiere Python 3.11 o superior. Desde la raíz del repositorio:
+ 
+ ```powershell
++# Solo si el entorno todavía no existe:
+ python -m venv .venv
+ .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+-.\.venv\Scripts\python.exe -m uvicorn src.main:app --reload
++$env:NAXJI_PERSISTENCE_MODE = 'postgres'
++$env:NAXJI_AUTH_MODE = 'supabase'
++$env:NAXJI_AUTH_COOKIE_SECURE = 'false' # Solo desarrollo HTTP local
++.\.venv\Scripts\python.exe -m uvicorn src.main:app --host 127.0.0.1 --port 8000
+ ```
+ 
+ - Salud: http://127.0.0.1:8000/health
+ - Swagger: http://127.0.0.1:8000/docs
+ - OpenAPI: http://127.0.0.1:8000/openapi.json
+ 
+-Use **un solo proceso/worker** en la demo: cada proceso tiene memoria independiente.
+-Reiniciar o recargar el servidor elimina solicitudes, predicciones e informes.
+-
+-## Usuario temporal y roles
++Configure las variables privadas según `.env.example` en su `.env` local excluido
++de Git. No sobrescriba un `.env` existente. PostgreSQL conserva datos al reiniciar.
++En otra terminal: `npm.cmd ci` y `npm.cmd run dev -- --host 127.0.0.1 --port 5173`.
++Abra http://127.0.0.1:5173 e inicie sesión con su cuenta Supabase existente.
++
++Carga inicial, con vista previa y verificación de idempotencia:
++
++```powershell
++.\.venv\Scripts\python.exe scripts/cargar_catalogos.py
++# Después de revisar las inserciones:
++.\.venv\Scripts\python.exe scripts/cargar_catalogos.py --apply
++```
++
++La carga ya fue aplicada en este proyecto; repetirla no duplica registros.
++Guarde el enlace `/nuevo-informe?solicitud=UUID` para recuperar el formulario.
++
++## Modo de pruebas en memoria (opcional)
++
++Solo para pruebas: `NAXJI_PERSISTENCE_MODE=memory` y `NAXJI_AUTH_MODE=mock`.
++En ese modo los datos sí se pierden al reiniciar y cada proceso tiene su memoria.
+ 
+ En Swagger pulse **Authorize** e introduzca `demo-funcionario` (sin escribir `Bearer`).
+ En Postman use `Authorization: Bearer demo-funcionario`.
+@@ -36,9 +60,8 @@
+ | `demo-admin` | Elaborar y acceder a todos los recursos de la demo |
+ 
+ Estos valores son selectores de identidades ficticias, **no credenciales ni sesiones reales**.
+-No se crean usuarios ni se almacenan contraseñas. Inicio, cierre de sesión y validación
+-de JWT corresponden a Supabase Auth y quedan pendientes. El futuro adaptador deberá
+-reemplazar `get_current_user` y resolver perfiles/roles verificados.
++Estos tokens solo funcionan en modo de pruebas. PostgreSQL usa Supabase Auth,
++con sesión real, perfil y roles consultados en el backend. No cree cuentas duplicadas.
+ 
+ Configuración opcional antes de iniciar el servidor:
+ 
+@@ -52,16 +75,17 @@
+ de la demo está en `autorizar`; debe acordarse con el equipo antes de producción.
+ CORS queda cerrado salvo los orígenes configurados.
+ 
+-## Demo completa en Swagger / Postman
++## Flujo de borradores en Swagger / Postman
+ 
+ 1. Consulte `GET /tipos-informe` y `GET /areas`. Los cuatro códigos de tipo provienen
+-   del SQL; UUID, áreas, plantillas y normativa son fixtures ficticias.
++   de PostgreSQL en modo real; los fixtures ficticios solo corresponden al modo memoria.
+ 2. Cree `POST /solicitudes` con `{"asunto":"Inspección de un parque"}`.
+    Guarde el `id` devuelto. Puede incluir tipo, áreas y plantilla desde este paso.
+ 3. Consulte y edite mediante `GET /solicitudes/{id}` y `PUT /solicitudes/{id}`.
+    El PUT actualiza solo los campos enviados; las referencias admiten `null`.
+ 4. Ejecute `POST /solicitudes/{id}/predecir-contexto`, sin cuerpo.
+-   La respuesta identifica `es_mock: true`, el modelo ficticio y las confianzas de prueba.
++   La respuesta identifica el predictor configurado y sus advertencias. Sus confianzas
++   no acreditan precisión institucional validada.
+ 5. Confirme con `POST /solicitudes/{id}/validar-prediccion`:
+ 
+    ```json
+@@ -75,8 +99,8 @@
+    original; `GET /solicitudes/{id}` muestra el tipo/área finalmente confirmados.
+ 6. Consulte `GET /plantillas?tipo_informe_id=UUID_CONFIRMADO`.
+    Seleccione una con `PUT /solicitudes/{id}` y `{"plantilla_id":"UUID_PLANTILLA"}`.
+-   Si seleccionó una plantilla antes de predecir, el contexto confirmado debe
+-   coincidir con su tipo; de lo contrario quite/cambie la plantilla o corrija el contexto.
++   Si la confirmación cambia tipo/destino y vuelve incompatible la plantilla,
++   la API despeja esa plantilla y sus valores; seleccione nuevamente el formato.
+ 7. Consulte `GET /plantillas/{plantilla_id}/campos` y copie los IDs de los campos
+    `antecedentes` y `detalle`. Guarde:
+ 
+@@ -122,8 +146,11 @@
+ | Método | Ruta | Uso |
+ |---|---|---|
+ | GET | `/health` | Estado, sin autenticación |
+-| GET | `/auth/me` | Identidad temporal actual |
++| GET | `/auth/me` | Identidad y roles verificados según modo configurado |
+ | POST | `/solicitudes` | Crear; devuelve 201 |
++| POST | `/solicitudes/completa` | Crear formulario completo y valores en una transacción |
++| PUT | `/solicitudes/{solicitud_id}/completa` | Guardado completo; rollback si faltan obligatorios |
++| GET | `/solicitudes/{solicitud_id}/contexto` | Recuperar última predicción; control de propietario |
+ | GET | `/solicitudes/{solicitud_id}` | Consultar |
+ | PUT | `/solicitudes/{solicitud_id}` | Modificar campos o cancelar |
+ | PUT | `/solicitudes/{solicitud_id}/valores` | Guardar valores de plantilla |
+@@ -131,7 +158,7 @@
+ | GET | `/areas` | Catálogo de áreas |
+ | GET | `/plantillas` | Plantillas activas; filtro opcional por tipo |
+ | GET | `/plantillas/{plantilla_id}/campos` | Campos activos ordenados |
+-| POST | `/solicitudes/{solicitud_id}/predecir-contexto` | Predicción mock |
++| POST | `/solicitudes/{solicitud_id}/predecir-contexto` | Sugerencia desde asunto; requiere confirmación |
+ | POST | `/solicitudes/{solicitud_id}/validar-prediccion` | Confirmar/corregir/rechazar |
+ | POST | `/solicitudes/{solicitud_id}/generar-borrador` | Generar mock; devuelve 201 |
+ | GET | `/informes/{informe_id}` | Consultar la última versión |
+@@ -163,7 +190,10 @@
+ 
+ Se cubren casos de uso, validaciones, contratos mock, control por rol/propietario,
+ concurrencia de generación, rollback, versiones, endpoints, Swagger, CORS e imports.
+-`httpx` se utiliza en TestClient; no se realizan llamadas a servicios externos en las pruebas.
++`httpx` se utiliza en TestClient. Para incluir pruebas reales PostgreSQL:
++`$env:NAXJI_RUN_DB_TESTS='1'` antes de pytest. Las pruebas Auth con contraseñas en
++archivo son opcionales; la alternativa manual es
++`node scripts/verificar_catalogos_navegador.cjs` (requiere Playwright en `venv/ui-check`).
+ Con las versiones instaladas, Starlette emite un aviso de deprecación de su uso de
+ httpx en TestClient; las pruebas pasan. No se añadió otro cliente HTTP por ese aviso.
+ 
+@@ -172,10 +202,9 @@
+ Consulte [docs/CONTRATOS_PMV1.md](docs/CONTRATOS_PMV1.md) y el
+ [inventario de entrega](docs/ENTREGA_PMV1.md).
+ 
+-- Frontend React: consumir OpenAPI, catálogos, solicitudes, contexto y edición de informes.
+-- Base de datos: implementar los repositorios y la unidad de trabajo con Supabase/PostgreSQL.
+-- Auth: sustituir la dependencia temporal por verificación de Supabase Auth y lectura de perfil/roles.
+-- RF-IA-01: implementar `ContextPredictor`, con IDs de catálogos reales y confianzas.
++- React, repositorios PostgreSQL, unidad de trabajo y Supabase Auth están integrados.
++- RF-IA-01: pendientes validación experimental institucional, categorías sin correspondencia
++  y curación jurídica de etiquetas normativas. No se reentrenó el modelo.
+ - LLM: implementar `GeneradorBorrador` con plantilla, datos, contexto e instrucciones.
+ 
+ El `OllamaAdapter` y `LLMPort` que ya existían en el commit remoto se conservan sin
+--- antes/scripts/cargar_catalogos.py
++++ despues/scripts/cargar_catalogos.py
+@@ -0,0 +1,89 @@
++"""Previsualiza con rollback; --apply confirma las inserciones del seed PMV1."""
++import argparse
++import json
++from pathlib import Path
++import sys
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT))
++from psycopg import Error, sql
++from psycopg.rows import dict_row
++from src.infrastructure.configuration.database import DatabaseSettings, database_error
++
++TABLES = ('areas_municipales', 'tipos_informe', 'plantillas', 'campos_plantilla', 'normativas')
++SEED = ROOT / 'database/seeds/pmv1_catalogos.sql'
++PILOTO = 'Informe Técnico – Piloto NAXJI'
++
++
++def seed_body():
++    # La transacción la controla este programa; el SQL también funciona solo.
++    return '\n'.join(line for line in SEED.read_text(encoding='utf8').splitlines()
++                     if line.strip() not in {'BEGIN;', 'COMMIT;'})
++
++
++def snapshot(c):
++    return {table: {str(r['id']): r for r in c.execute(
++        sql.SQL('SELECT * FROM public.{} ORDER BY id').format(sql.Identifier(table)))}
++        for table in TABLES}
++
++
++def load(c):
++    before = snapshot(c)
++    c.execute(seed_body())
++    after = snapshot(c)
++    for table in TABLES:
++        if any(after[table].get(key) != row for key, row in before[table].items()):
++            raise ValueError('El seed intentó alterar un registro existente')
++    piloto = next(r for r in after['plantillas'].values()
++                  if r['nombre'] == PILOTO and r['version'] == 1)
++    tipo = after['tipos_informe'][str(piloto['tipo_informe_id'])]
++    if tipo['codigo'] != 'INFORME_TECNICO' or not piloto['activa'] or piloto['area_id']:
++        raise ValueError('La plantilla existente es incompatible; requiere revisión')
++    campos = [r for r in after['campos_plantilla'].values() if r['plantilla_id'] == piloto['id']]
++    expected = {'referencia_documento': ('text', False, 1), 'fecha': ('date', True, 2),
++                'antecedentes': ('textarea', True, 3), 'objetivo': ('textarea', True, 4),
++                'detalle': ('textarea', True, 5), 'conclusiones': ('textarea', True, 6),
++                'recomendaciones': ('textarea', True, 7)}
++    if {r['clave']: (r['tipo_dato'], r['obligatorio'], r['orden']) for r in campos if r['activo']} != expected:
++        raise ValueError('Los campos existentes difieren del piloto')
++    parents = {'MDT_CONCEJO': None, 'MDT_ALCALDIA': 'MDT_CONCEJO', 'MDT_GM': 'MDT_ALCALDIA',
++               'MDT_GSP': 'MDT_GM', 'MDT_GDT': 'MDT_GM', 'MDT_GDE': 'MDT_GM',
++               'MDT_GAJ': 'MDT_GM', 'MDT_SGGA': 'MDT_GSP', 'MDT_SGDUR': 'MDT_GDT'}
++    areas = {r['codigo']: r for r in after['areas_municipales'].values()}
++    for code, parent in parents.items():
++        if not areas[code]['activo'] or areas[code]['area_padre_id'] != (areas[parent]['id'] if parent else None):
++            raise ValueError('Área existente inactiva o jerarquía incompatible: ' + code)
++    changes = {t: [r for k, r in after[t].items() if k not in before[t]] for t in TABLES}
++    c.execute(seed_body())
++    if snapshot(c) != after:
++        raise ValueError('Falló la verificación de idempotencia')
++    return changes, after
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--apply', action='store_true', help='Confirmar carga; por defecto hace rollback')
++    args = parser.parse_args()
++    try:
++        with DatabaseSettings.from_env().connect(row_factory=dict_row) as c:
++            changes, after = load(c)
++            print(json.dumps({'insertar': changes, 'actualizar': [],
++                              'totales': {t: len(rows) for t, rows in after.items()}},
++                             ensure_ascii=True, default=str, indent=2))
++            print('IDEMPOTENCIA: segunda ejecución sin cambios')
++            if not args.apply:
++                c.rollback()
++                print('VISTA PREVIA: ROLLBACK, no se guardaron filas')
++            else:
++                c.commit()
++                print('APLICADO: COMMIT, registros anteriores conservados')
++        return 0
++    except Error as error:
++        print(database_error(error), file=sys.stderr)
++    except ValueError as error:
++        print(str(error), file=sys.stderr)
++    return 1
++
++
++if __name__ == '__main__':
++    raise SystemExit(main())
+--- antes/scripts/test_catalogos_frontend.cjs
++++ despues/scripts/test_catalogos_frontend.cjs
+@@ -0,0 +1,73 @@
++// Prueba AISLADA de React: HTTP interceptado, sin Supabase ni credenciales reales.
++const path = require('node:path');
++const assert = require('node:assert/strict');
++const { chromium } = require(path.resolve(__dirname,'../venv/ui-check/node_modules/playwright'));
++const id = n => `00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
++
++(async () => {
++  const browser = await chromium.launch({channel:'msedge',headless:true});
++  try {
++    const page = await browser.newPage();
++    const area={id:id(1),codigo:'TEST_AREA',nombre:'Área prueba aislada',activo:true};
++    const tipo={id:id(2),codigo:'INFORME_TECNICO',nombre:'Informe Técnico',activo:true};
++    const plantilla={id:id(3),tipo_informe_id:tipo.id,nombre:'Plantilla prueba aislada',descripcion:'DEMOSTRACIÓN',activa:true};
++    const campos=[{id:id(4),clave:'fecha',etiqueta:'Fecha',tipo_dato:'date',obligatorio:true},
++      {id:id(5),clave:'detalle',etiqueta:'Análisis técnico',tipo_dato:'textarea',obligatorio:true}];
++    let solicitud=null, prediccion=null, completos=0;
++    await page.route('**/api/**',async route => {
++      const req=route.request(), url=new URL(req.url());
++      const p=url.pathname.slice(4), method=req.method();
++      let data, status=200;
++      if(p==='/auth/config') data={mode:'supabase',persistence:'postgres'};
++      else if(p==='/auth/refresh') data={access_token:'TOKEN_FICTICIO_SOLO_PRUEBA',expires_in:3600};
++      else if(p==='/auth/me') data={id:id(6),roles:['FUNCIONARIO'],nombres:'Prueba',activo:true};
++      else if(p==='/areas') data=[area];
++      else if(p==='/tipos-informe') data=[tipo];
++      else if(p==='/plantillas') data=[plantilla];
++      else if(p===`/plantillas/${plantilla.id}/campos`) data=campos;
++      else if(p==='/solicitudes' && method==='POST') {
++        const body=req.postDataJSON();
++        assert.equal(body.tipo_informe_id,null); assert.equal(body.plantilla_id,null);
++        solicitud={...body,id:id(7),estado:'BORRADOR',valores:[]}; data=solicitud; status=201;
++      } else if(p.endsWith('/predecir-contexto')) {
++        prediccion={id:id(8),solicitud_id:solicitud.id,tipo_informe:tipo,area_destino:area,
++          modelo:'TEST_AISLADO',resultado_validacion:'PENDIENTE',normativas:[],advertencias:['Prueba aislada']}; data=prediccion;
++      } else if(p.endsWith('/validar-prediccion')) {
++        prediccion.resultado_validacion='CORREGIDA';
++        solicitud.tipo_informe_id=tipo.id; solicitud.area_destino_id=area.id; data=prediccion;
++      } else if(p.endsWith('/contexto')) data=prediccion;
++      else if(p.endsWith('/completa')) { solicitud={...solicitud,...req.postDataJSON()}; completos++; data=solicitud; }
++      else if(p===`/solicitudes/${id(7)}` && method==='GET') data=solicitud;
++      else { data={detail:'Ruta de fixture no definida'}; status=404; }
++      await route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
++    });
++    await page.goto('http://127.0.0.1:5173/nuevo-informe');
++    await page.getByLabel('Asunto',{exact:false}).fill('Solo asunto para predecir');
++    await page.getByRole('button',{name:'Predecir estructura y contexto'}).click();
++    await page.getByText('Contexto sugerido',{exact:true}).waitFor();
++    assert.equal(solicitud.plantilla_id,null);
++    await page.locator('#tipo-informe').selectOption(tipo.id);
++    await page.locator('#area-origen').selectOption(area.id);
++    await page.locator('#area-destino').selectOption(area.id);
++    await page.getByRole('button',{name:'Corregir con mis datos'}).click();
++    await page.getByText('Contexto confirmado. La plantilla anterior no coincide con el tipo propuesto; seleccione una nueva.',{exact:true}).waitFor();
++    await page.locator('#plantilla').selectOption(plantilla.id);
++    await page.getByLabel('Fecha',{exact:false}).waitFor();
++    await page.getByRole('button',{name:'Guardar datos',exact:true}).click();
++    await page.getByText('Complete el campo obligatorio: Fecha.',{exact:true}).waitFor();
++    assert.equal(completos,0);
++    await page.getByLabel('Fecha',{exact:false}).fill('2026-09-29');
++    await page.getByLabel('Análisis técnico',{exact:false}).fill('Solo datos de fixture');
++    await page.getByRole('button',{name:'Guardar datos',exact:true}).click();
++    await page.getByText('Datos del informe guardados correctamente.',{exact:true}).waitFor();
++    assert.equal(completos,1);
++    await page.reload();
++    await page.getByText('Solicitud recuperada de la base de datos.',{exact:true}).waitFor();
++    assert.equal(await page.getByLabel('Fecha',{exact:false}).inputValue(),'2026-09-29');
++    assert.equal(await page.getByLabel('Análisis técnico',{exact:false}).inputValue(),'Solo datos de fixture');
++    assert.equal(await page.locator('#area-origen').inputValue(),area.id);
++    assert.equal(completos,1);
++    console.log('REACT_AISLADO: asunto solo, correccion, obligatorios, guardado unico y recarga: OK');
++    console.log('HTTP_INTERCEPTADO: esta prueba NO verifica Supabase Auth ni PostgreSQL.');
++  } finally { await browser.close(); }
++})().catch(e=>{console.error('PRUEBA_REACT_AISLADA_FALLO:',e.message);process.exitCode=1;});
+--- antes/scripts/verificar_catalogos_navegador.cjs
++++ despues/scripts/verificar_catalogos_navegador.cjs
+@@ -0,0 +1,116 @@
++// Inicio manual real. No graba contraseñas, cookies ni tokens en archivos o logs.
++const path = require('node:path');
++const crypto = require('node:crypto');
++const { spawn } = require('node:child_process');
++const root = path.resolve(__dirname, '..');
++const { chromium } = require(path.join(root, 'venv/ui-check/node_modules/playwright'));
++const origin = 'http://127.0.0.1:5173';
++const resumeId = process.argv.find(arg => arg.startsWith('--solicitud='))?.split('=')[1];
++if (resumeId && !/^[0-9a-f-]{36}$/i.test(resumeId)) throw new Error('UUID de solicitud inválido');
++const check = (condition, label) => { if (!condition) throw new Error(label); console.log(label + ': OK'); };
++
++(async () => {
++  const browser = await chromium.launch({ channel: 'msedge', headless: false });
++  const tokens = {};
++  let phase = 'login-A';
++  let saved;
++  const pages = [];
++  try {
++    for (const [letter, email] of [['A','funcionario1.naxji@gmail.com'],['B','funcionario2.naxji@gmail.com']]) {
++      phase = 'login-' + letter;
++      const context = await browser.newContext();
++      const page = await context.newPage();
++      page.setDefaultTimeout(60000);
++      pages.push(page);
++      const verified = page.waitForResponse(async r => {
++        if (new URL(r.url()).pathname !== '/api/auth/me' || r.status() !== 200) return false;
++        return (await r.json()).email === email;
++      }, { timeout: 1200000 });
++      verified.catch(() => {});
++      await page.goto(origin);
++      await page.getByLabel('Correo electrónico').fill(email);
++      await page.getByLabel('Contraseña').focus();
++      await page.bringToFront();
++      console.log('ESPERANDO_LOGIN_MANUAL_' + letter);
++      const me = await verified;
++      tokens[letter] = (await me.request().headerValue('authorization')).slice(7);
++      await page.waitForURL('**/nuevo-informe');
++      check((await me.json()).roles.includes('FUNCIONARIO'), 'LOGIN_REAL_' + letter);
++      if (letter === 'B') continue;
++      phase = 'catalogos-formulario';
++      await page.locator('#tipo-informe option').nth(4).waitFor({ state: 'attached' });
++      check(await page.locator('#area-origen option').count() === 10, 'REACT_NUEVE_AREAS');
++      check(await page.locator('#tipo-informe option').count() === 5, 'REACT_CUATRO_TIPOS');
++      if (resumeId) {
++        phase = 'recuperar-solicitud-existente';
++        const response = page.waitForResponse(r => new URL(r.url()).pathname === '/api/solicitudes/'+resumeId && r.request().method()==='GET');
++        await page.goto(origin+'/nuevo-informe?solicitud='+encodeURIComponent(resumeId));
++        const recovered = await response;
++        check(recovered.status()===200,'REACT_RECUPERA_SOLICITUD_EXISTENTE');
++        saved=await recovered.json();
++        check(saved.asunto.includes('DEMO_PMV1_') && saved.valores.length===7,'SOLICITUD_DEMO_EXISTENTE_SIETE_VALORES');
++        await page.getByText('Solicitud recuperada de la base de datos.',{exact:true}).waitFor();
++        for (const item of saved.valores) {
++          check(await page.locator('#campo-'+item.campo_plantilla_id).inputValue()===item.valor,'REACT_RECUPERA_CAMPO_EXISTENTE');
++        }
++        console.log('REANUDACION_SIN_CREAR_SOLICITUD: OK');
++        continue;
++      }
++      const asunto = 'Evaluación técnica del mantenimiento de parques y áreas verdes. DEMO_PMV1_' + crypto.randomUUID();
++      await page.getByLabel('Asunto', { exact: false }).fill(asunto);
++      const predictionResponse = page.waitForResponse(r => r.url().endsWith('/predecir-contexto'));
++      await page.getByRole('button', {name:'Predecir estructura y contexto'}).click();
++      const prediction = await predictionResponse;
++      check(prediction.status()===200, 'RF_IA_DESDE_ASUNTO_SIN_SELECCIONES');
++      await page.locator('#tipo-informe').selectOption({ label:'Informe Técnico' });
++      await page.locator('#area-origen').selectOption({ label:'Subgerencia de Gestión Ambiental' });
++      await page.locator('#area-destino').selectOption({ label:'Subgerencia de Gestión Ambiental' });
++      const confirmed = page.waitForResponse(r => r.url().endsWith('/validar-prediccion'));
++      await page.getByRole('button', {name:'Corregir con mis datos'}).click();
++      check((await confirmed).status()===200, 'CONFIRMACION_EXPLICITA_CONTEXTO');
++      await page.locator('#plantilla').selectOption({ label:'Informe Técnico – Piloto NAXJI' });
++      await page.getByLabel('Fecha', {exact:false}).waitFor();
++      check(await page.locator('[id^="campo-"]').count()===7, 'REACT_SIETE_CAMPOS_DINAMICOS');
++      await page.getByRole('button', {name:'Guardar datos',exact:true}).click();
++      await page.getByText('Complete el campo obligatorio: Fecha.',{exact:true}).waitFor();
++      console.log('REACT_RECHAZA_OBLIGATORIO_VACIO: OK');
++      await page.getByLabel('Número o referencia').fill('DEMO-PMV1-SIN-VALOR-OFICIAL');
++      await page.getByLabel('Fecha', {exact:false}).fill('2026-09-29');
++      for (const label of ['Antecedentes','Objetivo del informe','Análisis técnico','Conclusiones','Recomendaciones']) {
++        await page.getByLabel(label,{exact:false}).fill('DEMOSTRACIÓN NAXJI: '+label+'. Datos de prueba sin valor institucional.');
++      }
++      const written = page.waitForResponse(r => r.url().endsWith('/completa') && r.request().method()==='PUT');
++      await page.getByRole('button', {name:'Guardar datos',exact:true}).click();
++      const result=await written;
++      check(result.status()===200,'REACT_GUARDADO_ATOMICO_SUPABASE');
++      saved=await result.json();
++      check(saved.valores.length===7,'SIETE_VALORES_PERSISTIDOS');
++      await page.reload();
++      await page.getByText('Solicitud recuperada de la base de datos.',{exact:true}).waitFor();
++      check(await page.locator('#asunto').inputValue()===asunto,'REACT_RECUPERA_ASUNTO_TRAS_RECARGA');
++      for (const item of saved.valores) {
++        check(await page.locator('#campo-'+item.campo_plantilla_id).inputValue()===item.valor,'REACT_RECUPERA_CAMPO');
++      }
++      check(new URL(page.url()).searchParams.get('solicitud')===saved.id,'URL_RECUPERA_MISMA_SOLICITUD');
++    }
++    phase='sql-reinicio-rls';
++    const child=spawn(path.join(root,'.venv/Scripts/python.exe'),[path.join(root,'scripts/verificar_catalogos_sesion.py')],
++      {cwd:root,windowsHide:true,stdio:['pipe','pipe','pipe']});
++    child.stdout.on('data',d=>process.stdout.write(d));
++    child.stderr.on('data',()=>{});
++    child.stdin.end(JSON.stringify({tokens,solicitud:saved,reuse_servers:process.argv.includes('--existing-servers')}));
++    check(await new Promise(resolve=>child.on('close',resolve))===0,'VERIFICACION_SQL_REINICIO_RLS');
++    phase='logout';
++    for (const page of pages) {
++      await page.getByRole('button',{name:'Cerrar sesión'}).click();
++      await page.waitForURL(origin+'/');
++    }
++    console.log('LOGOUT_REACT_A_B: OK');
++    console.log('CATALOGOS_PMV1_NAVEGADOR_COMPLETO: OK');
++  } catch (error) {
++    console.error('CATALOGOS_NAVEGADOR_INCOMPLETO: '+phase+'; '+error.name+'; sin datos privados.');
++    process.exitCode=1;
++  } finally {
++    await browser.close();
++  }
++})();
+--- antes/scripts/verificar_catalogos_sesion.py
++++ despues/scripts/verificar_catalogos_sesion.py
+@@ -0,0 +1,72 @@
++"""Evidencia real con tokens recibidos por stdin; nunca los imprime o guarda."""
++import json
++from contextlib import nullcontext
++import socket
++import sys
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++import httpx
++from src.infrastructure.configuration.database import DatabaseSettings
++from src.infrastructure.auth.supabase import SupabaseAuthSettings
++from scripts.verificar_auth_supabase import backend, check, VerificationError
++
++
++def run(data):
++    identifier = data['solicitud']['id']
++    expected = data['solicitud']
++    db = DatabaseSettings.from_env()
++    with db.connect() as c:
++        c.execute('SET TRANSACTION READ ONLY')
++        row = c.execute('SELECT usuario_id::text,asunto,plantilla_id::text FROM public.solicitudes WHERE id=%s', (identifier,)).fetchone()
++        check(row == (expected['usuario_id'], expected['asunto'], expected['plantilla_id']), 'React_solicitud_confirmada_SQL')
++        fields = c.execute('SELECT campo_plantilla_id::text,valor FROM public.solicitud_valores WHERE solicitud_id=%s', (identifier,)).fetchall()
++        check(dict(fields) == {v['campo_plantilla_id']: v['valor'] for v in expected['valores']} and len(fields)==7,
++              'Siete_valores_React_iguales_SQL')
++    reuse_servers = data.get('reuse_servers', False)
++    port = 8000
++    if not reuse_servers:
++        with socket.socket() as s:
++            s.bind(('127.0.0.1',0))
++            port=s.getsockname()[1]
++    url=f'http://127.0.0.1:{port}'
++    headers={'Authorization': 'Bearer '+data['tokens']['A']}
++    with httpx.Client(base_url=url, headers=headers, timeout=40, trust_env=False) as a:
++        with (nullcontext() if reuse_servers else backend(port)) as first:
++            r=a.get('/solicitudes/'+identifier)
++            check(r.status_code==200 and r.json()==expected, 'Servidor_existente_recupera_piloto' if reuse_servers else 'Proceso_uno_recupera_piloto_completo')
++        with (nullcontext() if reuse_servers else backend(port)) as second:
++            if not reuse_servers:
++                check(first != second, 'Backend_reiniciado_PID_diferente')
++            r=a.get('/solicitudes/'+identifier)
++            check(r.status_code==200 and r.json()==expected, 'Persistencia_y_recuperacion_servidor_existente' if reuse_servers else 'Proceso_dos_conserva_piloto_y_valores')
++            b={'Authorization': 'Bearer '+data['tokens']['B']}
++            check(a.get('/solicitudes/'+identifier,headers=b).status_code==403, 'Funcionario_B_lectura_ajena_403')
++            check(a.get('/solicitudes/'+identifier+'/contexto',headers=b).status_code==403, 'Funcionario_B_contexto_ajeno_403')
++            check(a.put('/solicitudes/'+identifier,json={'asunto':'No alterar'},headers=b).status_code==403, 'Funcionario_B_escritura_ajena_403')
++            with db.connect() as c:
++                c.execute('SET TRANSACTION READ ONLY')
++                expected_ids={str(r[0]) for r in c.execute('SELECT id FROM public.areas_municipales WHERE activo')}
++            r=a.get('/areas')
++            check(r.status_code==200 and {x['id'] for x in r.json()}==expected_ids, 'Endpoint_areas_UUID_reales_PostgreSQL')
++    auth=SupabaseAuthSettings.from_env()
++    with httpx.Client(timeout=30) as client:
++        for letter,count in [('A',1),('B',0)]:
++            r=client.get(auth.url+'/rest/v1/solicitudes',params={'select':'id','id':'eq.'+identifier},
++                         headers={'apikey':auth.publishable_key,'Authorization':'Bearer '+data['tokens'][letter]})
++            check(r.status_code==200 and len(r.json())==count,'RLS_Data_API_'+letter)
++    print('SOLICITUD_DEMO_CONSERVADA: '+identifier,flush=True)
++
++
++if __name__=='__main__':
++    try:
++        # Node envía JSON UTF-8 por stdin; Windows puede usar cp1252 por defecto.
++        # Una decodificación distinta altera tildes y produce comparaciones falsas.
++        sys.stdin.reconfigure(encoding='utf-8')
++        run(json.load(sys.stdin))
++    except VerificationError as e:
++        print(str(e),flush=True)
++        raise SystemExit(1)
++    except Exception as e:
++        print('VERIFICACION_NO_COMPLETADA: '+type(e).__name__+'; sin datos privados',flush=True)
++        raise SystemExit(1)
+--- antes/src/adapters/in/controllers/catalogo_controller.py
++++ despues/src/adapters/in/controllers/catalogo_controller.py
+@@ -3,11 +3,11 @@
+ from fastapi import APIRouter
+ 
+ from src.infrastructure.dependencies import Dependencias, Usuario
+-from ..schemas.catalogo_response import CampoResponse, CatalogoResponse, PlantillaResponse
++from ..schemas.catalogo_response import AreaResponse, CampoResponse, CatalogoResponse, PlantillaResponse
+ from ..schemas.error_response import RESPUESTAS_ERROR
+ 
+ 
+-router = APIRouter(tags=["Catálogos de demostración"], responses=RESPUESTAS_ERROR)
++router = APIRouter(tags=["Catálogos"], responses=RESPUESTAS_ERROR)
+ 
+ 
+ @router.get("/tipos-informe", response_model=list[CatalogoResponse])
+@@ -15,7 +15,7 @@
+     return deps.consultar_catalogos.tipos(usuario)
+ 
+ 
+-@router.get("/areas", response_model=list[CatalogoResponse])
++@router.get("/areas", response_model=list[AreaResponse])
+ def areas(usuario: Usuario, deps: Dependencias):
+     return deps.consultar_catalogos.areas(usuario)
+ 
+--- antes/src/adapters/in/controllers/ia_controller.py
++++ despues/src/adapters/in/controllers/ia_controller.py
+@@ -10,11 +10,17 @@
+ from ..schemas.prediccion_response import PrediccionResponse, representar_prediccion
+ 
+ 
+-router = APIRouter(prefix="/solicitudes", tags=["Contexto y borrador (MOCK)"], responses=RESPUESTAS_ERROR)
++router = APIRouter(prefix="/solicitudes", tags=["Contexto y borrador"], responses=RESPUESTAS_ERROR)
++
++
++@router.get("/{solicitud_id}/contexto", response_model=PrediccionResponse | None)
++def obtener_contexto(solicitud_id: UUID, usuario: Usuario, deps: Dependencias):
++    prediccion = deps.obtener_contexto.ejecutar(solicitud_id, usuario)
++    return representar_prediccion(prediccion, deps.catalogos) if prediccion else None
+ 
+ 
+ @router.post("/{solicitud_id}/predecir-contexto", response_model=PrediccionResponse,
+-             summary="Obtener una predicción ficticia; no ejecuta RF-IA-01")
++             summary="Sugerir contexto desde el asunto mediante el predictor configurado")
+ def predecir(solicitud_id: UUID, usuario: Usuario, deps: Dependencias):
+     prediccion = deps.predecir_contexto.ejecutar(solicitud_id, usuario)
+     return representar_prediccion(prediccion, deps.catalogos)
+--- antes/src/adapters/in/controllers/solicitud_controller.py
++++ despues/src/adapters/in/controllers/solicitud_controller.py
+@@ -5,7 +5,9 @@
+ from src.application.ports.input.solicitud_use_case import DatosSolicitud
+ from src.infrastructure.dependencies import Dependencias, Usuario
+ from ..schemas.error_response import RESPUESTAS_ERROR
+-from ..schemas.solicitud_request import ActualizarSolicitudRequest, SolicitudRequest, ValoresSolicitudRequest
++from ..schemas.solicitud_request import (
++    ActualizarSolicitudRequest, SolicitudRequest, ValoresSolicitudRequest, SolicitudCompletaRequest,
++)
+ from ..schemas.solicitud_response import SolicitudResponse
+ 
+ 
+@@ -16,6 +18,23 @@
+ @router.post("/", response_model=SolicitudResponse, status_code=201, include_in_schema=False)
+ def crear(request: SolicitudRequest, usuario: Usuario, deps: Dependencias):
+     return deps.crear_solicitud.ejecutar(usuario, DatosSolicitud(**request.model_dump()))
++
++
++@router.post("/completa", response_model=SolicitudResponse, status_code=201,
++             summary="Registrar formulario completo y valores de forma atómica")
++def crear_completa(request: SolicitudCompletaRequest, usuario: Usuario, deps: Dependencias):
++    return deps.guardar_solicitud_completa.ejecutar(
++        usuario, DatosSolicitud(**request.model_dump(exclude={"valores"})),
++        {v.campo_plantilla_id: v.valor for v in request.valores})
++
++
++@router.put("/{solicitud_id}/completa", response_model=SolicitudResponse,
++            summary="Actualizar formulario completo; revierte todo si falta un obligatorio")
++def actualizar_completa(solicitud_id: UUID, request: SolicitudCompletaRequest,
++                       usuario: Usuario, deps: Dependencias):
++    return deps.guardar_solicitud_completa.ejecutar(
++        usuario, DatosSolicitud(**request.model_dump(exclude={"valores"})),
++        {v.campo_plantilla_id: v.valor for v in request.valores}, solicitud_id)
+ 
+ 
+ @router.get("/{solicitud_id}", response_model=SolicitudResponse)
+--- antes/src/adapters/in/schemas/catalogo_response.py
++++ despues/src/adapters/in/schemas/catalogo_response.py
+@@ -20,6 +20,12 @@
+     area_id: UUID | None
+     version: int
+     activa: bool
++    descripcion: str | None = None
++
++
++class AreaResponse(CatalogoResponse):
++    area_padre_id: UUID | None = None
++    descripcion: str | None = None
+ 
+ 
+ class CampoResponse(ResponseModel):
+--- antes/src/adapters/in/schemas/prediccion_response.py
++++ despues/src/adapters/in/schemas/prediccion_response.py
+@@ -37,6 +37,7 @@
+     tipo_informe: CategoriaPredicha | None
+     area_destino: CategoriaPredicha | None
+     normativas: list[NormativaResponse]
++    advertencias: list[str] = Field(default_factory=list)
+ 
+ 
+ def representar_prediccion(p: PrediccionContexto, catalogos: CatalogoRepository) -> PrediccionResponse:
+@@ -59,4 +60,5 @@
+         validado_por=p.validado_por, validado_at=p.validado_at,
+         tipo_informe=categoria(tipo, p.confianza_tipo),
+         area_destino=categoria(area, p.confianza_area), normativas=normas,
++        advertencias=p.parametros.get('advertencias_catalogo', []),
+     )
+--- antes/src/adapters/in/schemas/solicitud_request.py
++++ despues/src/adapters/in/schemas/solicitud_request.py
+@@ -46,3 +46,10 @@
+         if len(ids) != len(set(ids)):
+             raise ValueError("No repita campos de plantilla")
+         return self
++
++
++class SolicitudCompletaRequest(SolicitudRequest, ValoresSolicitudRequest):
++    """Extensión explícita: datos y valores se validan/guardan en una transacción."""
++    tipo_informe_id: UUID
++    plantilla_id: UUID
++    area_destino_id: UUID
+--- antes/src/adapters/in/web/pages/NuevoInforme.jsx
++++ despues/src/adapters/in/web/pages/NuevoInforme.jsx
+@@ -1,7 +1,7 @@
+ import { useEffect, useState } from "react";
+ 
+ import { mensajeError } from "../services/api";
+-import { puedeElaborar } from "../services/authService";
++import { puedeElaborar, obtenerUsuarioGuardado } from "../services/authService";
+ import {
+   obtenerAreas,
+   obtenerCamposPlantilla,
+@@ -13,11 +13,14 @@
+   generarBorrador,
+   predecirContexto,
+   validarPrediccion,
++  obtenerContexto,
+ } from "../services/iaService";
+ import {
+   actualizarSolicitud,
+   crearSolicitud,
+   guardarValores,
++  obtenerSolicitud,
++  guardarSolicitudCompleta,
+ } from "../services/solicitudService";
+ 
+ const normalizarLista = (datos) => {
+@@ -50,6 +53,7 @@
+ 
+   const [tipoInformeId, setTipoInformeId] = useState("");
+   const [areaDestinoId, setAreaDestinoId] = useState("");
++  const [areaOrigenId, setAreaOrigenId] = useState(obtenerUsuarioGuardado()?.area_id || "");
+   const [plantillaId, setPlantillaId] = useState("");
+   const [asunto, setAsunto] = useState("");
+   const [valoresCampos, setValoresCampos] = useState({});
+@@ -65,6 +69,7 @@
+   const [titulo, setTitulo] = useState("");
+ 
+   const [cargando, setCargando] = useState(true);
++  const [cargaFallida, setCargaFallida] = useState(false);
+   const [procesando, setProcesando] = useState(false);
+   const [error, setError] = useState("");
+   const [mensaje, setMensaje] = useState("");
+@@ -80,8 +85,34 @@
+           setTiposInforme(normalizarLista(tipos));
+           setAreas(normalizarLista(areasMunicipales));
+         }
++        const id = new URLSearchParams(window.location.search).get("solicitud");
++        if (id) {
++          const guardada = await obtenerSolicitud(id);
++          const [formatos, campos, contexto] = await Promise.all([
++            guardada.tipo_informe_id ? obtenerPlantillas(guardada.tipo_informe_id) : [],
++            guardada.plantilla_id ? obtenerCamposPlantilla(guardada.plantilla_id) : [],
++            obtenerContexto(id),
++          ]);
++          if (activo) {
++            setSolicitud(guardada);
++            setAsunto(guardada.asunto);
++            setTipoInformeId(guardada.tipo_informe_id || "");
++            setAreaOrigenId(guardada.area_origen_id || "");
++            setAreaDestinoId(guardada.area_destino_id || "");
++            setPlantillaId(guardada.plantilla_id || "");
++            setPlantillas(normalizarLista(formatos));
++            setCamposPlantilla(normalizarLista(campos));
++            setValoresCampos(Object.fromEntries(guardada.valores.map(v => [v.campo_plantilla_id, v.valor])));
++            setPrediccion(contexto);
++            setPrediccionConfirmada(["ACEPTADA", "CORREGIDA"].includes(contexto?.resultado_validacion));
++            setMensaje("Solicitud recuperada de la base de datos.");
++          }
++        }
+       } catch (err) {
+-        if (activo) setError(mensajeError(err, "No se pudieron cargar los catálogos."));
++        if (activo) {
++          setCargaFallida(true);
++          setError(mensajeError(err, "No se pudieron recuperar los catálogos o la solicitud. Recargue para reintentar."));
++        }
+       } finally {
+         if (activo) setCargando(false);
+       }
+@@ -129,20 +160,23 @@
+     setPlantillaId("");
+     setCamposPlantilla([]);
+     setValoresCampos({});
+-    invalidarPrediccion();
++    setPrediccionConfirmada(false);
+     setError("");
+     setMensaje("");
+ 
+     try {
++      setProcesando(true);
+       await cargarPlantillas(id);
+     } catch (err) {
+       setError(mensajeError(err, "No se pudieron cargar las plantillas."));
++    } finally {
++      setProcesando(false);
+     }
+   };
+ 
+   const cambiarArea = (e) => {
+     setAreaDestinoId(e.target.value);
+-    invalidarPrediccion();
++    setPrediccionConfirmada(false);
+     setError("");
+     setMensaje("");
+   };
+@@ -155,11 +189,14 @@
+     setMensaje("");
+ 
+     try {
++      setProcesando(true);
+       await cargarCampos(id);
+     } catch (err) {
+       setError(
+         mensajeError(err, "No se pudieron cargar los campos de la plantilla.")
+       );
++    } finally {
++      setProcesando(false);
+     }
+   };
+ 
+@@ -191,6 +228,10 @@
+   };
+ 
+   const validarFormulario = () => {
++    if (!areaOrigenId) {
++      setError("Seleccione el área de origen.");
++      return false;
++    }
+     if (!tipoInformeId) {
+       setError("Seleccione un tipo de informe.");
+       return false;
+@@ -218,7 +259,7 @@
+ 
+       const valor = valoresCampos[campo.id];
+ 
+-      if (valor === undefined || valor === null || valor === "") {
++      if (valor === undefined || valor === null || (typeof valor === "string" && !valor.trim())) {
+         setError(`Complete el campo obligatorio: ${campo.etiqueta}.`);
+         return false;
+       }
+@@ -246,20 +287,37 @@
+     return valores;
+   };
+ 
+-  const persistirSolicitud = async () => {
++  const recordarSolicitud = (actual) => {
++    setSolicitud(actual);
++    const url = new URL(window.location.href);
++    url.searchParams.set("solicitud", actual.id);
++    window.history.replaceState(null, "", url);
++  };
++
++  const persistirSolicitud = async (completa = true) => {
+     const datosSolicitud = {
+       asunto: asunto.trim(),
+-      tipo_informe_id: tipoInformeId,
+-      plantilla_id: plantillaId,
+-      area_destino_id: areaDestinoId,
++      tipo_informe_id: tipoInformeId || null,
++      plantilla_id: plantillaId || null,
++      area_origen_id: areaOrigenId || null,
++      area_destino_id: areaDestinoId || null,
+     };
++
++    if (completa) {
++      const actual = await guardarSolicitudCompleta(solicitud?.id, {
++        ...datosSolicitud, valores: armarValores(),
++      });
++      recordarSolicitud(actual);
++      return actual;
++    }
+ 
+     let solicitudActual = solicitud
+       ? await actualizarSolicitud(solicitud.id, datosSolicitud)
+       : await crearSolicitud(datosSolicitud);
+ 
+-    solicitudActual = await guardarValores(solicitudActual.id, armarValores());
+-    setSolicitud(solicitudActual);
++    recordarSolicitud(solicitudActual);
++    if (plantillaId) solicitudActual = await guardarValores(solicitudActual.id, armarValores());
++    recordarSolicitud(solicitudActual);
+     return solicitudActual;
+   };
+ 
+@@ -295,7 +353,8 @@
+       return;
+     }
+ 
+-    if (!validarFormulario()) {
++    if (!asunto.trim()) {
++      setError("Ingrese el asunto para solicitar una sugerencia.");
+       return;
+     }
+ 
+@@ -304,7 +363,7 @@
+       setError("");
+       setMensaje("");
+ 
+-      const solicitudActual = await persistirSolicitud();
++      const solicitudActual = await persistirSolicitud(false);
+       const resultado = await predecirContexto(solicitudActual.id);
+ 
+       setPrediccion(resultado);
+@@ -324,14 +383,17 @@
+     const aceptada = estado === "ACEPTADA" || estado === "CORREGIDA";
+     setPrediccionConfirmada(aceptada);
+ 
+-    if (estado !== "ACEPTADA") {
++    if (!aceptada) {
+       return "";
+     }
+ 
+-    const tipoConfirmado = resultado.tipo_informe?.id;
+-    const areaConfirmada = resultado.area_destino?.id;
+-
+-    if (tipoConfirmado && tipoConfirmado !== tipoInformeId) {
++    const actual = await obtenerSolicitud(solicitud.id);
++    recordarSolicitud(actual);
++    const tipoConfirmado = actual.tipo_informe_id;
++    const areaConfirmada = actual.area_destino_id;
++    if (areaConfirmada) setAreaDestinoId(areaConfirmada);
++
++    if (tipoConfirmado && (tipoConfirmado !== tipoInformeId || actual.plantilla_id !== plantillaId)) {
+       setTipoInformeId(tipoConfirmado);
+       setPlantillaId("");
+       setCamposPlantilla([]);
+@@ -406,11 +468,14 @@
+       return;
+     }
+ 
++    if (!validarFormulario()) return;
++
+     try {
+       setProcesando(true);
+       setError("");
+       setMensaje("");
+ 
++      await persistirSolicitud();
+       const resultado = await generarBorrador(
+         solicitud.id,
+         instrucciones.trim() ||
+@@ -466,12 +531,7 @@
+   };
+ 
+   const etiquetaCampo = (campo) => {
+-    const etiquetas = {
+-      antecedentes: "Antecedentes",
+-      detalle: "Análisis / detalle",
+-    };
+-
+-    return etiquetas[campo.clave] || campo.etiqueta;
++    return campo.etiqueta;
+   };
+ 
+   const renderCampo = (campo) => {
+@@ -480,6 +540,7 @@
+     if (campo.tipo_dato === "textarea") {
+       return (
+         <textarea
++          id={`campo-${campo.id}`}
+           rows="4"
+           value={valor ?? ""}
+           onChange={(e) => cambiarValorCampo(campo, e.target.value)}
+@@ -492,6 +553,7 @@
+ 
+       return (
+         <select
++          id={`campo-${campo.id}`}
+           value={valor ?? ""}
+           onChange={(e) => cambiarValorCampo(campo, e.target.value)}
+         >
+@@ -509,6 +571,7 @@
+       return (
+         <label className="checkbox-field">
+           <input
++            id={`campo-${campo.id}`}
+             type="checkbox"
+             checked={Boolean(valor)}
+             onChange={(e) => cambiarValorCampo(campo, e.target.checked)}
+@@ -520,6 +583,7 @@
+ 
+     return (
+       <input
++        id={`campo-${campo.id}`}
+         type={
+           campo.tipo_dato === "date"
+             ? "date"
+@@ -552,12 +616,15 @@
+ 
+       {error && <div className="error-message">{error}</div>}
+       {mensaje && <div className="success-message">{mensaje}</div>}
++      {solicitud && <p>Solicitud guardada: <code>{solicitud.id}</code> · Estado: {solicitud.estado}</p>}
++      <fieldset disabled={cargando || cargaFallida || procesando || (solicitud && !["BORRADOR", "LISTA_PARA_GENERAR"].includes(solicitud.estado))}
++        style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+ 
+       <div className="card">
+         <h2>1. Selección de tipo de informe, gerencia y plantilla</h2>
+         <p className="card-help">
+-          Elija el tipo de informe municipal, la gerencia de destino y la
+-          plantilla institucional que define la estructura del borrador.
++          Puede escribir primero el asunto y pedir una sugerencia de IA sin
++          elegir aún tipo, destino ni plantilla. Confirme la propuesta antes de generar.
+         </p>
+ 
+         {cargando ? (
+@@ -565,8 +632,8 @@
+         ) : (
+           <>
+             <div className="form-group">
+-              <label>Tipo de informe *</label>
+-              <select value={tipoInformeId} onChange={cambiarTipoInforme}>
++              <label htmlFor="tipo-informe">Tipo de informe *</label>
++              <select id="tipo-informe" value={tipoInformeId} onChange={cambiarTipoInforme}>
+                 <option value="">Seleccione un tipo de informe</option>
+                 {tiposInforme.map((tipo) => (
+                   <option key={tipo.id} value={tipo.id}>
+@@ -577,8 +644,15 @@
+             </div>
+ 
+             <div className="form-group">
+-              <label>Gerencia / Área de destino *</label>
+-              <select value={areaDestinoId} onChange={cambiarArea}>
++              <label htmlFor="area-origen">Área de origen *</label>
++              <select id="area-origen" value={areaOrigenId} onChange={e => setAreaOrigenId(e.target.value)}>
++                <option value="">Seleccione el área de origen</option>
++                {areas.map(area => <option key={area.id} value={area.id}>{area.nombre}</option>)}
++              </select>
++            </div>
++            <div className="form-group">
++              <label htmlFor="area-destino">Gerencia / Área de destino *</label>
++              <select id="area-destino" value={areaDestinoId} onChange={cambiarArea}>
+                 <option value="">Seleccione un área</option>
+                 {areas.map((area) => (
+                   <option key={area.id} value={area.id}>
+@@ -589,8 +663,9 @@
+             </div>
+ 
+             <div className="form-group">
+-              <label>Plantilla *</label>
++              <label htmlFor="plantilla">Plantilla *</label>
+               <select
++                id="plantilla"
+                 value={plantillaId}
+                 onChange={cambiarPlantilla}
+                 disabled={!tipoInformeId}
+@@ -602,6 +677,8 @@
+                   </option>
+                 ))}
+               </select>
++              {tipoInformeId && plantillas.length === 0 && <p>No hay plantillas activas para este tipo.</p>}
++              {plantillaId && <p className="card-help">{plantillas.find(p => p.id === plantillaId)?.descripcion}</p>}
+             </div>
+           </>
+         )}
+@@ -615,8 +692,9 @@
+         </p>
+ 
+         <div className="form-group">
+-          <label>Asunto *</label>
++          <label htmlFor="asunto">Asunto *</label>
+           <input
++            id="asunto"
+             type="text"
+             value={asunto}
+             placeholder="Ejemplo: Inspección de un parque"
+@@ -630,7 +708,7 @@
+             <h3 className="section-subtitle">Antecedentes y datos</h3>
+             {camposPlantilla.map((campo) => (
+               <div className="form-group" key={campo.id}>
+-                <label>
++                <label htmlFor={`campo-${campo.id}`}>
+                   {etiquetaCampo(campo)}
+                   {campo.obligatorio ? " *" : ""}
+                 </label>
+@@ -669,6 +747,7 @@
+         {prediccion && (
+           <div className="prediccion-box">
+             <h3>Contexto sugerido</h3>
++            {prediccion.advertencias?.map(aviso => <p className="warning-inline" key={aviso}>{aviso}</p>)}
+ 
+             {prediccion.es_mock && (
+               <p className="warning-inline">
+@@ -766,6 +845,7 @@
+         </button>
+       </div>
+ 
++      </fieldset>
+       {informe && (
+         <div className="card">
+           <h2>4. Edición y guardado</h2>
+--- antes/src/adapters/in/web/services/iaService.js
++++ despues/src/adapters/in/web/services/iaService.js
+@@ -1,4 +1,6 @@
+ import api from "./api";
++
++export const obtenerContexto = async (id) => (await api.get(`/solicitudes/${id}/contexto`)).data;
+ 
+ export const predecirContexto = async (solicitudId) => {
+   const response = await api.post(
+--- antes/src/adapters/in/web/services/solicitudService.js
++++ despues/src/adapters/in/web/services/solicitudService.js
+@@ -1,4 +1,11 @@
+ import api from "./api";
++
++export const guardarSolicitudCompleta = async (id, datos) => {
++  const response = id
++    ? await api.put(`/solicitudes/${id}/completa`, datos)
++    : await api.post("/solicitudes/completa", datos);
++  return response.data;
++};
+ 
+ export const crearSolicitud = async (datos) => {
+   const response = await api.post("/solicitudes", datos);
+@@ -28,4 +35,4 @@
+   );
+ 
+   return response.data;
+-};+};
+--- antes/src/adapters/out/ai/context_predictor_catalogo.py
++++ despues/src/adapters/out/ai/context_predictor_catalogo.py
+@@ -5,12 +5,23 @@
+ 
+ 
+ class ContextPredictorCatalogo(ContextPredictor):
++    # Correspondencias de encaminamiento propuestas, sujetas a confirmación humana.
++    # ROF 2020 MDT, art. 6, pp. 7-8. No implica validación experimental del modelo.
++    AREAS_MDT = {
++        'AREA_SERVICIOS_PUBLICOS': 'MDT_GSP',
++        'AREA_DESARROLLO_ECONOMICO': 'MDT_GDE',
++        'AREA_ASESORIA_JURIDICA': 'MDT_GAJ',
++        'AREA_ECOLOGIA': 'MDT_SGGA',
++        'AREA_DESARROLLO_URBANO': 'MDT_SGDUR',
++    }
+     def __init__(self, predictor, catalogos):
+         self.predictor, self.catalogos = predictor, catalogos
+ 
+     @staticmethod
+-    def resolve(identifier, labels, records):
++    def resolve(identifier, labels, records, aliases=None):
+         code = next((r.codigo for r in labels if r.id == identifier), None)
++        if not any(r.codigo == code and r.activo for r in records):
++            code = (aliases or {}).get(code, code)
+         match = next((r for r in records if code is not None and r.codigo == code and r.activo), None)
+         if match is None:
+             raise DatosInvalidos("Falta un código del modelo en el catálogo PostgreSQL; revise los catálogos institucionales")
+@@ -20,12 +31,23 @@
+         result = self.predictor.predecir(asunto, solicitud_id)
+         result.tipo_informe_predicho_id = self.resolve(
+             result.tipo_informe_predicho_id, TIPOS, self.catalogos.tipos_informe())
++        areas = self.catalogos.areas()
++        # Los tests existentes pueden usar sus propios catálogos con códigos PoC.
++        aliases = self.AREAS_MDT if any(a.codigo.startswith('MDT_') for a in areas if a.codigo) else {}
+         result.area_destino_predicha_id = self.resolve(
+-            result.area_destino_predicha_id, AREAS, self.catalogos.areas())
++            result.area_destino_predicha_id, AREAS, areas, aliases)
++        warnings, resolved = [], []
+         for norma in result.normativas:
+             code = next((r.codigo for r in NORMATIVAS if r.id == norma.normativa_id), None)
+             real = self.catalogos.normativa_por_codigo(code) if code else None
+-            if real is None:
+-                raise DatosInvalidos("Falta una normativa del modelo en PostgreSQL; requiere revisión institucional")
++            if real is None or not real.activo:
++                warnings.append("Contexto normativo pendiente de revisión institucional: " + (code or 'categoría desconocida'))
++                continue
+             norma.normativa_id = real.id
++            resolved.append(norma)
++        result.normativas = resolved
++        result.parametros['advertencias_catalogo'] = warnings
++        if aliases:
++            result.parametros['advertencias_catalogo'].append(
++                'Correspondencia de área propuesta con el ROF 2020; confirme el destino. Rendimiento institucional no validado.')
+         return result
+--- antes/src/adapters/out/ai/generador_borrador_mock.py
++++ despues/src/adapters/out/ai/generador_borrador_mock.py
+@@ -11,7 +11,9 @@
+             contenido={
+                 "antecedentes": datos.get("antecedentes", ""),
+                 "desarrollo": f"BORRADOR MOCK — {asunto}. {datos.get('detalle', '')}",
+-                "conclusiones": "Texto de demostración; requiere elaboración y revisión humana.",
++                "objetivo": datos.get("objetivo", ""),
++                "conclusiones": datos.get("conclusiones", "Texto de demostración; requiere elaboración y revisión humana."),
++                "recomendaciones": datos.get("recomendaciones", ""),
+                 "plantilla": plantilla.nombre,
+                 "datos": datos,
+                 "contexto": {
+--- antes/src/adapters/out/persistence/postgres.py
++++ despues/src/adapters/out/persistence/postgres.py
+@@ -163,7 +163,9 @@
+                       (solicitud.id, [v.id for v in solicitud.valores]))
+             for value in solicitud.valores:
+                 save(c, "solicitud_valores", value, json_fields=("valor",))
+-        return solicitud
++            # Los triggers PostgreSQL son la autoridad de updated_at.
++            # Leer en la misma transacción evita devolver timestamps solo locales.
++            return self.obtener_por_id(solicitud.id)
+ 
+     def obtener_por_id(self, solicitud_id):
+         with self.uow.connection() as c:
+--- antes/src/application/use_cases/generar_borrador.py
++++ despues/src/application/use_cases/generar_borrador.py
+@@ -42,6 +42,13 @@
+             contexto = ContextoConfirmado(solicitud.tipo_informe_id, solicitud.area_destino_id,
+                                            tuple(n.normativa_id for n in p.normativas if n.aceptada))
+             resultado = self.generador.generar(solicitud.asunto, plantilla, datos, contexto, instrucciones)
++            areas = {a.id: a.nombre for a in self.s.catalogos.areas()}
++            resultado.contenido['encabezado'] = {
++                'asunto': solicitud.asunto,
++                'area_origen': areas.get(solicitud.area_origen_id),
++                'area_destino': areas.get(solicitud.area_destino_id),
++                'autor_id': str(solicitud.usuario_id),
++            }
+             validar_contenido(resultado.contenido)
+             informe = Informe(solicitud.id, plantilla.id, usuario.id, titulo=solicitud.asunto)
+             informe.versiones.append(VersionInforme(
+--- antes/src/application/use_cases/guardar_solicitud_completa.py
++++ despues/src/application/use_cases/guardar_solicitud_completa.py
+@@ -0,0 +1,26 @@
++"""Guardado atómico del formulario completo; los borradores conservan su contrato."""
++from src.application.use_cases.crear_solicitud import CrearSolicitud
++from src.application.use_cases.actualizar_solicitud import ActualizarSolicitud
++from src.application.use_cases.guardar_valores_solicitud import GuardarValoresSolicitud
++from src.domain.services.solicitud_service import SolicitudService
++from src.domain.services.errores import DatosInvalidos
++
++
++class GuardarSolicitudCompleta:
++    def __init__(self, servicios):
++        self.s = servicios
++
++    def ejecutar(self, usuario, datos, valores, solicitud_id=None):
++        with self.s.uow.transaccion():
++            if solicitud_id:
++                from dataclasses import asdict
++                solicitud = ActualizarSolicitud(self.s).ejecutar(solicitud_id, usuario, asdict(datos))
++            else:
++                solicitud = CrearSolicitud(self.s).ejecutar(usuario, datos)
++            self.s.validar_referencias(solicitud)
++            if not all((solicitud.tipo_informe_id, solicitud.plantilla_id,
++                        solicitud.area_origen_id, solicitud.area_destino_id)):
++                raise DatosInvalidos("El formulario completo requiere tipo, plantilla y áreas de origen y destino")
++            solicitud = GuardarValoresSolicitud(self.s).ejecutar(solicitud.id, usuario, valores)
++            SolicitudService.validar_obligatorios(solicitud, self.s.plantilla(solicitud.plantilla_id))
++            return solicitud
+--- antes/src/application/use_cases/obtener_contexto.py
++++ despues/src/application/use_cases/obtener_contexto.py
+@@ -0,0 +1,8 @@
++class ObtenerContexto:
++    def __init__(self, servicios):
++        self.s = servicios
++
++    def ejecutar(self, solicitud_id, usuario):
++        with self.s.uow.transaccion():
++            self.s.obtener(solicitud_id, usuario)
++            return self.s.predicciones.ultima(solicitud_id)
+--- antes/src/application/use_cases/validar_prediccion.py
++++ despues/src/application/use_cases/validar_prediccion.py
+@@ -43,6 +43,14 @@
+             if resultado != ResultadoValidacion.RECHAZADA:
+                 solicitud.tipo_informe_id = tipo_informe_id or p.tipo_informe_predicho_id
+                 solicitud.area_destino_id = area_destino_id or p.area_destino_predicha_id
++                # Al confirmar un contexto distinto se vuelve a elegir plantilla.
++                # No se conservan valores que pertenecen al formato anterior.
++                if solicitud.plantilla_id:
++                    plantilla = self.s.plantilla(solicitud.plantilla_id)
++                    if (plantilla.tipo_informe_id != solicitud.tipo_informe_id or
++                            (plantilla.area_id and plantilla.area_id != solicitud.area_destino_id)):
++                        solicitud.plantilla_id = None
++                        solicitud.valores = []
+                 self.s.validar_referencias(solicitud)
+             p.resultado_validacion = resultado
+             p.validado_por, p.validado_at = usuario.id, ahora()
+--- antes/src/domain/entities/catalogo.py
++++ despues/src/domain/entities/catalogo.py
+@@ -16,6 +16,8 @@
+     codigo: str | None
+     nombre: str
+     activo: bool = True
++    area_padre_id: UUID | None = None
++    descripcion: str | None = None
+ 
+ 
+ @dataclass(frozen=True)
+--- antes/src/domain/entities/plantilla.py
++++ despues/src/domain/entities/plantilla.py
+@@ -27,3 +27,4 @@
+     version: int = 1
+     activa: bool = True
+     campos: list[CampoPlantilla] = field(default_factory=list)
++    descripcion: str | None = None
+--- antes/src/infrastructure/configuration/container.py
++++ despues/src/infrastructure/configuration/container.py
+@@ -12,8 +12,10 @@
+ from src.application.use_cases.crear_solicitud import CrearSolicitud
+ from src.application.use_cases.generar_borrador import GenerarBorrador
+ from src.application.use_cases.guardar_valores_solicitud import GuardarValoresSolicitud
++from src.application.use_cases.guardar_solicitud_completa import GuardarSolicitudCompleta
+ from src.application.use_cases.obtener_informe import ObtenerInforme
+ from src.application.use_cases.obtener_solicitud import ObtenerSolicitud
++from src.application.use_cases.obtener_contexto import ObtenerContexto
+ from src.application.use_cases.predecir_contexto import PredecirContexto
+ from src.application.use_cases.servicios_solicitud import ServiciosSolicitud
+ from src.application.use_cases.validar_prediccion import ValidarPrediccion
+@@ -54,8 +56,10 @@
+                                             self.catalogos, self.uow)
+         self.crear_solicitud = CrearSolicitud(self.servicios)
+         self.obtener_solicitud = ObtenerSolicitud(self.servicios)
++        self.obtener_contexto = ObtenerContexto(self.servicios)
+         self.actualizar_solicitud = ActualizarSolicitud(self.servicios)
+         self.guardar_valores = GuardarValoresSolicitud(self.servicios)
++        self.guardar_solicitud_completa = GuardarSolicitudCompleta(self.servicios)
+         predictor = predictor or SklearnContextPredictor()
+         if self.persistence_mode == "postgres":
+             from src.adapters.out.ai.context_predictor_catalogo import ContextPredictorCatalogo
+--- antes/tests/test_catalogos_pmv1.py
++++ despues/tests/test_catalogos_pmv1.py
+@@ -0,0 +1,78 @@
++"""Contratos de formulario completo y sugerencias, sin red."""
++from dataclasses import replace
++from unittest.mock import Mock
++from uuid import uuid4
++
++import pytest
++from src.adapters.out.ai.context_predictor_catalogo import ContextPredictorCatalogo
++from src.adapters.out.ai.context_predictor_mock import ContextPredictorMock
++from src.adapters.out.persistence.datos_demo import TIPOS, AREAS
++from src.domain.services.errores import DatosInvalidos
++
++
++def formulario(client):
++    p = client.get('/plantillas').json()[0]
++    campos = client.get(f"/plantillas/{p['id']}/campos").json()
++    area = p['area_id'] or client.get('/areas').json()[0]['id']
++    return {'asunto': 'TEST formulario completo', 'tipo_informe_id': p['tipo_informe_id'],
++            'plantilla_id': p['id'], 'area_origen_id': area, 'area_destino_id': area,
++            'valores': [{'campo_plantilla_id': c['id'], 'valor': 'Datos de prueba'}
++                        for c in campos if c['obligatorio']]}
++
++
++def test_completa_creacion_actualizacion_y_rollback(client, deps):
++    body = formulario(client)
++    bad = {**body, 'valores': []}
++    assert client.post('/solicitudes/completa', json=bad).status_code == 400
++    assert not deps.memoria.solicitudes
++    created = client.post('/solicitudes/completa', json=body)
++    assert created.status_code == 201, created.text
++    url = '/solicitudes/' + created.json()['id']
++    original = client.get(url).json()
++    assert client.put(url + '/completa', json={**bad, 'asunto': 'No debe quedar'}).status_code == 400
++    assert client.get(url).json() == original
++    assert client.put(url + '/completa', json={**body, 'asunto': 'Actualizado'}).status_code == 200
++    client.headers['Authorization'] = 'Bearer demo-otro'
++    assert client.put(url + '/completa', json=body).status_code == 403
++    assert client.get(url + '/contexto').status_code == 403
++
++
++@pytest.mark.parametrize('field', ['tipo_informe_id','plantilla_id','area_destino_id','area_origen_id'])
++def test_completa_rechaza_referencias_desconocidas(client, deps, field):
++    body = formulario(client)
++    body[field] = str(uuid4())
++    assert client.post('/solicitudes/completa', json=body).status_code == 404
++    assert not deps.memoria.solicitudes
++
++
++def test_completa_rechaza_campo_ajeno(client, deps):
++    body = formulario(client)
++    body['valores'].append({'campo_plantilla_id': str(uuid4()), 'valor': 'Ajeno'})
++    assert client.post('/solicitudes/completa', json=body).status_code == 400
++    assert not deps.memoria.solicitudes
++
++
++def test_asunto_solo_y_recuperacion_contexto(client):
++    r = client.post('/solicitudes', json={'asunto': 'Evaluación de parque'})
++    url = '/solicitudes/' + r.json()['id']
++    assert client.get(url + '/contexto').json() is None
++    p = client.post(url + '/predecir-contexto')
++    assert p.status_code == 200
++    assert client.get(url + '/contexto').json() == p.json()
++    assert client.post(url + '/generar-borrador', json={}).status_code == 409
++
++
++def test_mapeo_mdt_sin_inventar_normativas_y_categoria_ausente():
++    repo = Mock()
++    repo.tipos_informe.return_value = [replace(t, id=uuid4()) for t in TIPOS]
++    area = replace(AREAS[0], id=uuid4(), codigo='MDT_SGGA', nombre='Subgerencia de Gestión Ambiental')
++    repo.areas.return_value = [area]
++    repo.normativa_por_codigo.return_value = None
++    adapter = ContextPredictorCatalogo(ContextPredictorMock(), repo)
++    p = adapter.predecir('Evaluación parque', uuid4())
++    assert p.area_destino_predicha_id == area.id
++    assert not p.normativas
++    assert p.parametros['advertencias_catalogo']
++    repo.areas.return_value = [replace(area, activo=False)]
++    with pytest.raises(DatosInvalidos, match='catálogo'):
++        adapter.predecir('Evaluación parque', uuid4())
+--- antes/tests/test_catalogos_supabase.py
++++ despues/tests/test_catalogos_supabase.py
+@@ -0,0 +1,126 @@
++"""Pruebas opt-in sobre catálogos reales. Autenticación inyectada solo en TestClient."""
++import json
++import os
++import subprocess
++import sys
++from pathlib import Path
++from uuid import uuid4
++
++import pytest
++from fastapi.testclient import TestClient
++from psycopg.rows import dict_row
++from scripts.cargar_catalogos import load, snapshot, PILOTO
++from src.infrastructure.configuration.database import DatabaseSettings
++from src.infrastructure.configuration.settings import Settings
++from src.infrastructure.configuration.container import Container
++from src.infrastructure.dependencies import get_current_user
++from src.domain.entities.usuario_actual import UsuarioActual
++from src.domain.value_objects.estados import Rol
++from src.main import create_app
++
++pytestmark = pytest.mark.skipif(os.getenv('NAXJI_RUN_DB_TESTS') != '1', reason='Supabase: prueba opt-in')
++ROOT = Path(__file__).resolve().parents[1]
++
++
++@pytest.fixture
++def db():
++    return DatabaseSettings.from_env()
++
++
++def datos(c):
++    p = c.execute('SELECT * FROM public.plantillas WHERE nombre=%s AND version=1', (PILOTO,)).fetchone()
++    assert p, 'Ejecute scripts/cargar_catalogos.py --apply'
++    campos = c.execute('SELECT * FROM public.campos_plantilla WHERE plantilla_id=%s ORDER BY orden', (p['id'],)).fetchall()
++    area = c.execute("SELECT id FROM public.areas_municipales WHERE codigo='MDT_SGGA'").fetchone()['id']
++    user = c.execute("SELECT id FROM auth.users WHERE email='funcionario1.naxji@gmail.com'").fetchone()['id']
++    return user, {'asunto': 'TEST_PILOTO_' + uuid4().hex, 'tipo_informe_id': str(p['tipo_informe_id']),
++                 'plantilla_id': str(p['id']), 'area_origen_id': str(area), 'area_destino_id': str(area),
++                 'valores': [{'campo_plantilla_id': str(f['id']),
++                             'valor': '2026-09-29' if f['tipo_dato'] == 'date' else 'DEMOSTRACION: ' + f['clave']}
++                            for f in campos]}, campos
++
++
++def app_for(container, user):
++    app = create_app(Settings(persistence_mode='postgres', auth_mode='disabled'), container)
++    app.dependency_overrides[get_current_user] = lambda: UsuarioActual(user, frozenset({Rol.FUNCIONARIO}))
++    return app
++
++
++def test_seed_idempotente_y_catalogos_rls(db):
++    with db.connect(row_factory=dict_row) as c:
++        before = snapshot(c)
++        changes, after = load(c)
++        assert all(not rows for rows in changes.values())
++        assert before == after
++        user, body, campos = datos(c)
++        inactive = c.execute("INSERT INTO public.areas_municipales(codigo,nombre,activo) VALUES (%s,'TEST inactiva',false) RETURNING id",
++                             ('TEST_' + uuid4().hex[:20],)).fetchone()['id']
++        c.execute('SET LOCAL ROLE authenticated')
++        c.execute("SELECT set_config('request.jwt.claims',%s,true)", (json.dumps({'sub': str(user), 'role': 'authenticated'}),))
++        assert c.execute('SELECT count(*) AS n FROM public.areas_municipales WHERE id=%s', (inactive,)).fetchone()['n'] == 0
++        for table in ('areas_municipales','tipos_informe','plantillas','campos_plantilla','normativas'):
++            assert c.execute('SELECT count(*) AS n FROM public.' + table).fetchone()['n'] == len(before[table])
++        c.rollback()
++    print('Seed: 0 inserciones al repetir; RLS authenticated: 9 areas, 4 tipos, 1 plantilla, 7 campos, 1 documento; inactiva invisible; rollback')
++
++
++def test_piloto_http_validaciones_y_rollback(db):
++    container = Container(Settings(persistence_mode='postgres', auth_mode='disabled'), database_settings=db)
++    class Abort(Exception): pass
++    with pytest.raises(Abort):
++        with container.uow.transaccion():
++            with container.uow.connection() as c:
++                user, body, campos = datos(c)
++                inactive = c.execute("INSERT INTO public.plantillas(nombre,tipo_informe_id,activa) VALUES (%s,%s,false) RETURNING id",
++                                     ('TEST_' + uuid4().hex, body['tipo_informe_id'])).fetchone()['id']
++                foreign = c.execute("INSERT INTO public.campos_plantilla(plantilla_id,clave,etiqueta,tipo_dato,orden) VALUES (%s,'ajeno','Ajeno','text',1) RETURNING id",
++                                    (inactive,)).fetchone()['id']
++                area_inactive = c.execute("INSERT INTO public.areas_municipales(codigo,nombre,activo) VALUES (%s,'TEST',false) RETURNING id",
++                                         ('TEST_' + uuid4().hex[:20],)).fetchone()['id']
++                type_inactive = c.execute("INSERT INTO public.tipos_informe(codigo,nombre,activo) VALUES (%s,'TEST',false) RETURNING id",
++                                         ('TEST_' + uuid4().hex[:20],)).fetchone()['id']
++            with TestClient(app_for(container, user)) as client:
++                assert len(client.get('/areas').json()) == 9
++                assert len(client.get('/tipos-informe').json()) == 4
++                assert len(client.get('/plantillas').json()) == 1
++                response = client.get(f"/plantillas/{body['plantilla_id']}/campos")
++                assert [r['id'] for r in response.json()] == [str(c['id']) for c in campos]
++                for key, value in [('plantilla_id', inactive), ('area_destino_id', area_inactive),
++                                   ('tipo_informe_id', type_inactive), ('plantilla_id', uuid4())]:
++                    assert client.post('/solicitudes/completa', json={**body, key: str(value)}).status_code == 404
++                assert client.post('/solicitudes/completa', json={**body, 'valores': []}).status_code == 400
++                bad = {**body, 'valores': [*body['valores'], {'campo_plantilla_id': str(foreign), 'valor': 'Ajeno'}]}
++                assert client.post('/solicitudes/completa', json=bad).status_code == 400
++                legal = next(t for t in client.get('/tipos-informe').json() if t['codigo']=='INFORME_LEGAL')
++                assert client.post('/solicitudes/completa', json={**body,'tipo_informe_id':legal['id']}).status_code == 400
++                with container.uow.connection() as c:
++                    assert c.execute('SELECT count(*) AS n FROM public.solicitudes WHERE asunto=%s',(body['asunto'],)).fetchone()['n'] == 0
++                r = client.post('/solicitudes/completa', json=body)
++                assert r.status_code == 201, r.text
++                path = '/solicitudes/' + r.json()['id']
++                original = client.get(path).json()
++                assert len(original['valores']) == 7
++                assert client.put(path + '/completa', json={**body,'asunto':'No conservar','valores':[]}).status_code == 400
++                assert client.get(path).json() == original
++            raise Abort()
++    print('FastAPI PostgreSQL: catalogos/UUID/campos 200, piloto 201, invalidos 400/404, update fallido revierte padre y valores')
++
++
++def test_piloto_sobrevive_otro_proceso(db):
++    with db.connect(row_factory=dict_row) as c:
++        user, body, _ = datos(c)
++    container = Container(Settings(persistence_mode='postgres', auth_mode='disabled'), database_settings=db)
++    try:
++        with TestClient(app_for(container, user)) as client:
++            result = client.post('/solicitudes/completa', json=body)
++            assert result.status_code == 201, result.text
++            saved = result.json()
++        worker = subprocess.run([sys.executable, str(ROOT/'tests/postgres_restart_worker.py'), 'read', str(user), saved['id']],
++                                capture_output=True, text=True, timeout=60, check=True)
++        assert json.loads(worker.stdout) == saved
++        with db.connect() as c:
++            assert c.execute('SELECT count(*) FROM public.solicitud_valores WHERE solicitud_id=%s', (saved['id'],)).fetchone()[0] == 7
++        print('Piloto persistente: HTTP 201 -> nuevo proceso HTTP GET 200 -> 7 valores SQL iguales')
++    finally:
++        with db.connect() as c:
++            c.execute('DELETE FROM public.solicitudes WHERE usuario_id=%s AND asunto=%s',(user,body['asunto']))

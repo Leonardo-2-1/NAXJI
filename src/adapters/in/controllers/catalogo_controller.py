@@ -3,11 +3,11 @@ from uuid import UUID
 from fastapi import APIRouter
 
 from src.infrastructure.dependencies import Dependencias, Usuario
-from ..schemas.catalogo_response import CampoResponse, CatalogoResponse, PlantillaResponse
+from ..schemas.catalogo_response import AreaResponse, CampoResponse, CatalogoResponse, PlantillaResponse
 from ..schemas.error_response import RESPUESTAS_ERROR
 
 
-router = APIRouter(tags=["Catálogos de demostración"], responses=RESPUESTAS_ERROR)
+router = APIRouter(tags=["Catálogos"], responses=RESPUESTAS_ERROR)
 
 
 @router.get("/tipos-informe", response_model=list[CatalogoResponse])
@@ -15,7 +15,7 @@ def tipos(usuario: Usuario, deps: Dependencias):
     return deps.consultar_catalogos.tipos(usuario)
 
 
-@router.get("/areas", response_model=list[CatalogoResponse])
+@router.get("/areas", response_model=list[AreaResponse])
 def areas(usuario: Usuario, deps: Dependencias):
     return deps.consultar_catalogos.areas(usuario)
 

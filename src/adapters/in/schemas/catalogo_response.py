@@ -20,6 +20,12 @@ class PlantillaResponse(ResponseModel):
     area_id: UUID | None
     version: int
     activa: bool
+    descripcion: str | None = None
+
+
+class AreaResponse(CatalogoResponse):
+    area_padre_id: UUID | None = None
+    descripcion: str | None = None
 
 
 class CampoResponse(ResponseModel):

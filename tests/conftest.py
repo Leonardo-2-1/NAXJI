@@ -5,11 +5,12 @@ from src.infrastructure.auth.mock import usuarios_demo
 from src.infrastructure.configuration.container import Container
 from src.infrastructure.configuration.settings import Settings
 from src.main import create_app
+from src.adapters.out.ai.context_predictor_mock import ContextPredictorMock
 
 
 @pytest.fixture
 def deps():
-    return Container()
+    return Container(Settings(), predictor=ContextPredictorMock())
 
 
 @pytest.fixture

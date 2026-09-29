@@ -1,14 +1,16 @@
 import axios from "axios";
+import { authConfig, clearSession, getAccessToken } from "./session";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "/api",
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+api.interceptors.request.use(async (config) => {
+  const token = await getAccessToken();
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -19,14 +21,18 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("usuario");
-
-      if (window.location.pathname !== "/") {
-        window.location.assign("/");
+      if (error.config && !error.config._authRetried && (await authConfig()).mode === "supabase") {
+        error.config._authRetried = true;
+        try {
+          await getAccessToken(true);
+          return api(error.config);
+        } catch (refreshError) {
+          return Promise.reject(refreshError);
+        }
       }
+      clearSession();
     }
 
     return Promise.reject(error);

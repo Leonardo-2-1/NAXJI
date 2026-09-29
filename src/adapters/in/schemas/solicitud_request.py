@@ -46,3 +46,10 @@ class ValoresSolicitudRequest(RequestModel):
         if len(ids) != len(set(ids)):
             raise ValueError("No repita campos de plantilla")
         return self
+
+
+class SolicitudCompletaRequest(SolicitudRequest, ValoresSolicitudRequest):
+    """Extensión explícita: datos y valores se validan/guardan en una transacción."""
+    tipo_informe_id: UUID
+    plantilla_id: UUID
+    area_destino_id: UUID
