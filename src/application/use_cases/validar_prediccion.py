@@ -43,6 +43,14 @@ class ValidarPrediccion:
             if resultado != ResultadoValidacion.RECHAZADA:
                 solicitud.tipo_informe_id = tipo_informe_id or p.tipo_informe_predicho_id
                 solicitud.area_destino_id = area_destino_id or p.area_destino_predicha_id
+                # Al confirmar un contexto distinto se vuelve a elegir plantilla.
+                # No se conservan valores que pertenecen al formato anterior.
+                if solicitud.plantilla_id:
+                    plantilla = self.s.plantilla(solicitud.plantilla_id)
+                    if (plantilla.tipo_informe_id != solicitud.tipo_informe_id or
+                            (plantilla.area_id and plantilla.area_id != solicitud.area_destino_id)):
+                        solicitud.plantilla_id = None
+                        solicitud.valores = []
                 self.s.validar_referencias(solicitud)
             p.resultado_validacion = resultado
             p.validado_por, p.validado_at = usuario.id, ahora()

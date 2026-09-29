@@ -10,3 +10,8 @@ class UsuarioActual:
     roles: frozenset[Rol]
     area_id: UUID | None = None
     activo: bool = True
+    email: str | None = None
+    nombres: str | None = None
+    apellidos: str | None = None
+    cargo: str | None = None
+    area_nombre: str | None = None

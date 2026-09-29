@@ -1,5 +1,12 @@
 import api from "./api";
 
+export const guardarSolicitudCompleta = async (id, datos) => {
+  const response = id
+    ? await api.put(`/solicitudes/${id}/completa`, datos)
+    : await api.post("/solicitudes/completa", datos);
+  return response.data;
+};
+
 export const crearSolicitud = async (datos) => {
   const response = await api.post("/solicitudes", datos);
   return response.data;

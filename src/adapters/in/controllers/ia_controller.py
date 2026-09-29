@@ -10,11 +10,17 @@ from ..schemas.prediccion_request import ValidarPrediccionRequest
 from ..schemas.prediccion_response import PrediccionResponse, representar_prediccion
 
 
-router = APIRouter(prefix="/solicitudes", tags=["Contexto y borrador (MOCK)"], responses=RESPUESTAS_ERROR)
+router = APIRouter(prefix="/solicitudes", tags=["Contexto y borrador"], responses=RESPUESTAS_ERROR)
+
+
+@router.get("/{solicitud_id}/contexto", response_model=PrediccionResponse | None)
+def obtener_contexto(solicitud_id: UUID, usuario: Usuario, deps: Dependencias):
+    prediccion = deps.obtener_contexto.ejecutar(solicitud_id, usuario)
+    return representar_prediccion(prediccion, deps.catalogos) if prediccion else None
 
 
 @router.post("/{solicitud_id}/predecir-contexto", response_model=PrediccionResponse,
-             summary="Obtener una predicción ficticia; no ejecuta RF-IA-01")
+             summary="Sugerir contexto desde el asunto mediante el predictor configurado")
 def predecir(solicitud_id: UUID, usuario: Usuario, deps: Dependencias):
     prediccion = deps.predecir_contexto.ejecutar(solicitud_id, usuario)
     return representar_prediccion(prediccion, deps.catalogos)

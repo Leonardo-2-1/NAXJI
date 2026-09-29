@@ -27,3 +27,4 @@ class Plantilla:
     version: int = 1
     activa: bool = True
     campos: list[CampoPlantilla] = field(default_factory=list)
+    descripcion: str | None = None

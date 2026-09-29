@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from src.adapters.out.persistence.datos_demo import AREAS, NORMATIVA, TIPOS
+from src.adapters.out.persistence.datos_demo import AREAS, NORMATIVAS, TIPOS
 from src.application.ports.output.context_predictor import ContextPredictor
 from src.domain.entities.prediccion_contexto import NormativaPredicha, PrediccionContexto
 
@@ -16,5 +16,5 @@ class ContextPredictorMock(ContextPredictor):
             confianza_tipo=0.91, confianza_area=0.87,
             modelo="MOCK_CONTEXT_PREDICTOR", version_modelo="demo-1",
             parametros={"mock": True, "asunto": asunto},
-            normativas=[NormativaPredicha(NORMATIVA.id, 0.82, 1)],
+            normativas=[NormativaPredicha(NORMATIVAS[0].id, 0.82, 1)],
         )

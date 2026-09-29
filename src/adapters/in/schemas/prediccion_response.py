@@ -37,6 +37,7 @@ class PrediccionResponse(ResponseModel):
     tipo_informe: CategoriaPredicha | None
     area_destino: CategoriaPredicha | None
     normativas: list[NormativaResponse]
+    advertencias: list[str] = Field(default_factory=list)
 
 
 def representar_prediccion(p: PrediccionContexto, catalogos: CatalogoRepository) -> PrediccionResponse:
@@ -59,4 +60,5 @@ def representar_prediccion(p: PrediccionContexto, catalogos: CatalogoRepository)
         validado_por=p.validado_por, validado_at=p.validado_at,
         tipo_informe=categoria(tipo, p.confianza_tipo),
         area_destino=categoria(area, p.confianza_area), normativas=normas,
+        advertencias=p.parametros.get('advertencias_catalogo', []),
     )

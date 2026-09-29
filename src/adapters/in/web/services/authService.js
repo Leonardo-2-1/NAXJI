@@ -1,4 +1,5 @@
 import api from "./api";
+import { clearSession, endSession, saveUser, startSession, storedUser } from "./session";
 
 const ROLES_ELABORACION = ["FUNCIONARIO", "ADMINISTRADOR"];
 
@@ -32,43 +33,26 @@ export const USUARIOS_DEMO = [
   },
 ];
 
-const guardarUsuario = (usuario) => {
-  localStorage.setItem("usuario", JSON.stringify(usuario));
-};
-
-export const login = async (token) => {
-  localStorage.setItem("token", token);
-
+export const login = async (credentials) => {
   try {
+    await startSession(credentials);
     const response = await api.get("/auth/me");
-    guardarUsuario(response.data);
+    saveUser(response.data);
     return response.data;
   } catch (error) {
-    localStorage.removeItem("token");
-    localStorage.removeItem("usuario");
+    clearSession();
     throw error;
   }
 };
 
 export const obtenerUsuarioActual = async () => {
   const response = await api.get("/auth/me");
-  guardarUsuario(response.data);
+  saveUser(response.data);
   return response.data;
 };
 
-export const logout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("usuario");
-};
-
-export const obtenerUsuarioGuardado = () => {
-  try {
-    const raw = localStorage.getItem("usuario");
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-};
+export const logout = endSession;
+export const obtenerUsuarioGuardado = storedUser;
 
 export const rolesUsuario = (usuario = obtenerUsuarioGuardado()) => {
   if (!usuario?.roles) {
@@ -91,5 +75,7 @@ export const puedeElaborar = (usuario = obtenerUsuarioGuardado()) => {
 export const etiquetaUsuario = (usuario = obtenerUsuarioGuardado()) => {
   const roles = rolesUsuario(usuario);
   const rol = roles.find((item) => ETIQUETAS_ROL[item]);
-  return ETIQUETAS_ROL[rol] || "Usuario de demo";
+  const nombre = usuario?.nombres || usuario?.email;
+  const etiqueta = ETIQUETAS_ROL[rol] || "Usuario";
+  return nombre ? `${nombre} — ${etiqueta}` : etiqueta;
 };
