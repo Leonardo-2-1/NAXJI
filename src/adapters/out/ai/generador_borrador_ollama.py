@@ -87,11 +87,8 @@ No coloques ```json.
             flags=re.IGNORECASE
         )
 
-        respuesta = re.sub(
-            r"\s*```$",
-            "",
-            respuesta
-        )
+        if respuesta.endswith("```"):
+            respuesta = respuesta[:-3].rstrip()
 
         inicio = respuesta.find("{")
         fin = respuesta.rfind("}")
