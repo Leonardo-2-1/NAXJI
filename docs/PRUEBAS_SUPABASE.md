@@ -20,6 +20,7 @@ una transaccion de solo lectura. No consulta datos personales.
 ```
 
 Primero realiza la comprobacion anterior. Despues crea una fila ficticia con
+
 UUID y codigo unicos en `public.tipos_informe`, la consulta, la actualiza,
 la elimina y comprueba cada resultado. Todas las escrituras se ejecutan dentro
 de una transaccion con rollback obligatorio, incluso si ocurre un error.
@@ -42,6 +43,7 @@ La fila de prueba no permanece visible en el panel de Supabase.
 
 Esta prueba valida operaciones SQL desde Python con el usuario de `.env`.
 Con el usuario `postgres` no demuestra los permisos RLS de un funcionario.
+
 Tampoco verifica por si sola los endpoints de FastAPI ni Supabase Auth. Los
 repositorios actuales admiten PostgreSQL y memoria segun la configuracion;
 no existe un endpoint HTTP DELETE. La cancelacion de una solicitud es un
