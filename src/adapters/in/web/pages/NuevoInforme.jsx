@@ -315,12 +315,30 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
     ejecutar("generar", async vigente => {
       const actual = await persistirDatos();
       if (!vigente()) return;
+      await solicitarBorrador(actual, vigente);
+    });
+  }
+
+  async function solicitarBorrador(actual, vigente) {
+    try {
       const resultado = await generarBorrador(actual.id, instrucciones.trim() || INSTRUCCIONES);
       if (!vigente()) return;
       mostrarInforme(resultado);
       recordar({ ...actual, estado: "GENERADA" }, resultado.informe_id);
       setMensaje("Borrador generado. Puede editarlo y guardar una nueva versión.");
-    });
+    } catch (err) {
+      // Si el cliente perdió conexión, el backend puede continuar PROCESANDO.
+      try {
+        const recuperada = await obtenerSolicitud(actual.id);
+        if (vigente()) recordar(recuperada);
+      } catch { /* Mantiene el error original; el enlace permite recuperar después. */ }
+      throw err;
+    }
+  }
+
+  function reintentarGeneracion() {
+    if (!elaboracionPermitida || ocupado || solicitud?.estado !== "PROCESANDO") return;
+    ejecutar("generar", vigente => solicitarBorrador(solicitudActual.current, vigente));
   }
 
   function guardarEdicion() {
@@ -468,6 +486,11 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
 
     <section className="card" aria-labelledby="etapa-borrador">
       <h2 id="etapa-borrador">4. Borrador</h2>
+      {!informe && solicitud?.estado === "PROCESANDO" && <div>
+        <p>Hay una generación en curso. Si se interrumpió, puede reintentar cuando venza su tiempo de espera. Se utilizarán los datos ya guardados.</p>
+        <button type="button" className="btn-primary" disabled={ocupado || !elaboracionPermitida}
+          onClick={reintentarGeneracion}>Reintentar generación</button>
+      </div>}
       {!informe && solicitud?.estado !== "GENERADA" && <fieldset disabled={bloqueada || ocupado || !contextoVigente || estadoPlantillas !== "listo" || !form.plantillaId || idCampos !== form.plantillaId} style={sinBorde}>
         <p>Complete la plantilla y los datos requeridos para generar. Se guardarán antes de llamar al generador.</p>
         <label htmlFor="instrucciones">Instrucciones para el generador</label>

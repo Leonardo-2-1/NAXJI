@@ -3,7 +3,8 @@
 API FastAPI con arquitectura hexagonal, React, PostgreSQL y Supabase Auth.
 Permite crear una solicitud, confirmar/corregir contexto, completar una plantilla,
 generar un borrador y guardar ediciones como versiones. El predictor ejecuta RF-IA-01
-con correspondencias de catálogo; el generador de borradores sigue siendo **mock**.
+con correspondencias de catálogo; el generador de borradores usa **Ollama local**
+con `qwen2.5:7b` y las secciones de la plantilla seleccionada.
 La plantilla técnica piloto es demostrativa, no un formato municipal aprobado.
 
 Estado y evidencias: [catálogos PMV1](docs/IMPLEMENTACION_CATALOGOS_PMV1.md) y
@@ -32,6 +33,43 @@ de Git. No sobrescriba un `.env` existente. PostgreSQL conserva datos al reinici
 En otra terminal: `npm.cmd ci` y `npm.cmd run dev -- --host 127.0.0.1 --port 5173`.
 Abra http://127.0.0.1:5173 e inicie sesión con su cuenta Supabase existente.
 
+## Generación con Ollama local
+
+Con Ollama encendido y `qwen2.5:7b` instalado, agregue estas variables al entorno
+del backend o a `.env.local` (conserve las demás variables existentes):
+
+```dotenv
+NAXJI_OLLAMA_BASE_URL=http://localhost:11434
+NAXJI_OLLAMA_MODEL=qwen2.5:7b
+NAXJI_OLLAMA_TIMEOUT_SECONDS=300
+```
+
+Son los valores por defecto. Reinicie el backend tras modificarlos. No use prefijo
+`VITE_`: el frontend solo habla con FastAPI. La URL no admite credenciales ni query;
+el tiempo máximo debe estar entre 1 y 1800 segundos e incluye cargar el modelo.
+Para comprobar disponibilidad en PowerShell:
+
+```powershell
+Invoke-RestMethod http://localhost:11434/api/tags
+# Solo si falta el modelo:
+ollama pull qwen2.5:7b
+```
+
+El backend envía `POST /api/generate`, `stream: false`, temperatura 0 y un esquema
+JSON de las secciones. También valida la respuesta y guarda el nombre configurado
+en `modelo_ia`. Los encabezados los construye el servidor. No hay sustitución
+automática por mock cuando falla el servicio.
+
+Los datos ingresados sirven para redactar, no para modificar las reglas del modelo.
+Sin resultados de inspección, análisis y conclusiones deben quedar pendientes de
+verificación. Las normas aceptadas se transmiten por código y título de catálogo;
+no son citas jurídicas verificadas y no se recupera su texto. Aún no hay RAG.
+El borrador requiere revisión humana: un esquema válido no demuestra veracidad.
+
+Las migraciones del [paso 3](docs/paso3-estructura-borradores.md) deben estar ya
+aplicadas. Esta integración no introduce ni modifica SQL. Detalles de concurrencia,
+errores y prueba real: [integración Ollama](docs/INTEGRACION_OLLAMA_LOCAL.md).
+
 Carga inicial, con vista previa y verificación de idempotencia:
 
 ```powershell
@@ -47,6 +85,8 @@ Guarde el enlace `/nuevo-informe?solicitud=UUID` para recuperar el formulario.
 
 Solo para pruebas: `NAXJI_PERSISTENCE_MODE=memory` y `NAXJI_AUTH_MODE=mock`.
 En ese modo los datos sí se pierden al reiniciar y cada proceso tiene su memoria.
+La generación también usa Ollama en modo memoria. Las pruebas automáticas inyectan
+`GeneradorBorradorMock` explícitamente; el modo de autenticación no elige el generador.
 
 En Swagger pulse **Authorize** e introduzca `demo-funcionario` (sin escribir `Bearer`).
 En Postman use `Authorization: Bearer demo-funcionario`.
@@ -101,14 +141,15 @@ CORS queda cerrado salvo los orígenes configurados.
    Seleccione una con `PUT /solicitudes/{id}` y `{"plantilla_id":"UUID_PLANTILLA"}`.
    Si la confirmación cambia tipo/destino y vuelve incompatible la plantilla,
    la API despeja esa plantilla y sus valores; seleccione nuevamente el formato.
-7. Consulte `GET /plantillas/{plantilla_id}/campos` y copie los IDs de los campos
-   `antecedentes` y `detalle`. Guarde:
+7. Consulte `GET /plantillas/{plantilla_id}/campos` y complete **todos** sus campos
+   obligatorios. Este es un ejemplo parcial con dos entradas; el piloto PostgreSQL
+   también exige fecha, objetivo, conclusiones y recomendaciones:
 
    ```json
    {
      "valores": [
        {"campo_plantilla_id":"UUID_ANTECEDENTES", "valor":"Solicitud de inspección recibida."},
-       {"campo_plantilla_id":"UUID_DETALLE", "valor":"Se registraron observaciones en el parque."}
+       {"campo_plantilla_id":"UUID_DETALLE", "valor":"No se dispone de resultados de inspección ni hallazgos; pendiente de verificación."}
      ]
    }
    ```
@@ -121,7 +162,8 @@ CORS queda cerrado salvo los orígenes configurados.
 8. Ejecute `POST /solicitudes/{id}/generar-borrador` con
    `{"instrucciones":"Respetar los datos de la inspección."}` o `{}`.
    Recibirá `informe_id`, `estado: BORRADOR`, `numero_version: 1` y `contenido`.
-   El mock devuelve texto de demostración, sin realizar inferencia ni llamadas externas.
+   Ollama devuelve texto según `secciones_salida`. El piloto es demostrativo y no
+   acredita un formato oficial ni la veracidad de hechos no aportados.
 9. Recupere `GET /informes/{informe_id}` y edite con `PUT /informes/{informe_id}`:
 
    ```json
@@ -129,14 +171,17 @@ CORS queda cerrado salvo los orígenes configurados.
      "numero_version": 1,
      "contenido": {
        "antecedentes": "Solicitud de inspección recibida.",
-       "desarrollo": "Contenido revisado por el funcionario.",
+       "objetivo": "Objetivo revisado por el funcionario.",
+       "analisis_tecnico": "Pendiente de contar con resultados verificados.",
        "conclusiones": "Conclusiones editadas."
      }
    }
    ```
 
    Se agrega la versión 2, con origen `USUARIO`; la versión anterior se conserva.
-   Envíe la versión que leyó. Una versión antigua produce 409.
+   Envíe la versión que leyó. Una versión antigua produce 409. Este ejemplo corresponde
+   al piloto técnico; otras plantillas usan sus propias secciones. Las versiones
+   anteriores conservan la estructura con la que fueron guardadas.
 
 Los IDs ilustrativos `UUID_...` deben reemplazarse por UUID reales devueltos por la API.
 El flujo anterior también se verifica automáticamente en `tests/test_api.py`.
@@ -160,7 +205,7 @@ El flujo anterior también se verifica automáticamente en `tests/test_api.py`.
 | GET | `/plantillas/{plantilla_id}/campos` | Campos activos ordenados |
 | POST | `/solicitudes/{solicitud_id}/predecir-contexto` | Sugerencia desde asunto; requiere confirmación |
 | POST | `/solicitudes/{solicitud_id}/validar-prediccion` | Confirmar/corregir/rechazar |
-| POST | `/solicitudes/{solicitud_id}/generar-borrador` | Generar mock; devuelve 201 |
+| POST | `/solicitudes/{solicitud_id}/generar-borrador` | Generar con Ollama; devuelve 201 |
 | GET | `/informes/{informe_id}` | Consultar la última versión |
 | PUT | `/informes/{informe_id}` | Guardar una nueva versión |
 
@@ -173,12 +218,21 @@ Los dos primeros admiten cancelación a `CANCELADA`. La API deriva los estados;
 solo acepta `CANCELADA` como cambio manual. Modificar asunto/tipo/destino invalida
 la confirmación; cambiar plantilla elimina valores de la plantilla anterior.
 Cambiar el asunto exige una nueva predicción. Cada solicitud puede generar un único informe.
+`PROCESANDO` es una reserva persistida en una transacción corta. La llamada a Ollama
+ocurre sin transacciones ni bloqueos PostgreSQL abiertos. Un fallo devuelve la solicitud
+a un estado editable. Tras una caída del proceso, el mismo POST permite reintentar
+cuando pasan el tiempo máximo configurado + 30 segundos desde la reserva. El frontend
+muestra “Reintentar generación” al recuperar una solicitud en `PROCESANDO`.
+Una respuesta tardía no puede sobrescribir un intento nuevo. Todos los workers deben
+compartir la misma configuración de timeout y tener sus relojes sincronizados.
 PMV1 solo edita informes en `BORRADOR`; los demás estados del SQL están definidos,
 pero sus flujos de revisión/aprobación quedan fuera de este alcance.
 
 Errores: 400 reglas/datos de negocio, 401 sin autenticación, 403 permiso/propietario,
 404 recurso inexistente, 409 estado/versión incompatible, 422 request inválido y
-500 fallo interno o de generación. Los errores 500 no exponen detalles del proveedor.
+500 fallo interno, 502 salida inválida/fallo de Ollama, 503 conexión o modelo no
+disponible y 504 tiempo agotado. Los errores de generación incluyen un `codigo`
+estable y un mensaje de una lista controlada, sin prompts ni detalles del proveedor.
 
 ## Pruebas
 
@@ -197,6 +251,22 @@ archivo son opcionales; la alternativa manual es
 Con las versiones instaladas, Starlette emite un aviso de deprecación de su uso de
 httpx en TestClient; las pruebas pasan. No se añadió otro cliente HTTP por ese aviso.
 
+Pruebas de frontend: `node --test tests/frontend/*.test.mjs`, `npm run lint` y
+`npm run build`. La suite habitual simula la API de Ollama mediante `httpx.MockTransport`.
+Para una prueba completa **optativa** con datos ficticios, predictor sklearn y Ollama reales:
+
+```powershell
+$env:NAXJI_PERSISTENCE_MODE='memory'
+$env:NAXJI_AUTH_MODE='mock'
+$env:NAXJI_RUN_OLLAMA_TESTS='1'
+.\.venv\Scripts\python.exe -m pytest -q -s tests/test_ollama_integration.py
+Remove-Item Env:NAXJI_RUN_OLLAMA_TESTS
+```
+
+El escenario PostgreSQL se activa adicionalmente con `NAXJI_TEST_PG_PORT` apuntando
+al clúster **aislado de pruebas** descrito en la documentación del paso 3; crea y
+elimina solo bases con nombres aleatorios de prueba. No utiliza el Supabase del usuario.
+
 ## Integración pendiente y contratos
 
 Consulte [docs/CONTRATOS_PMV1.md](docs/CONTRATOS_PMV1.md) y el
@@ -205,12 +275,12 @@ Consulte [docs/CONTRATOS_PMV1.md](docs/CONTRATOS_PMV1.md) y el
 - React, repositorios PostgreSQL, unidad de trabajo y Supabase Auth están integrados.
 - RF-IA-01: pendientes validación experimental institucional, categorías sin correspondencia
   y curación jurídica de etiquetas normativas. No se reentrenó el modelo.
-- LLM: implementar `GeneradorBorrador` con plantilla, datos, contexto e instrucciones.
+- LLM: integración local implementada con plantilla, datos, contexto legible e instrucciones;
+  pendientes evaluación amplia de fidelidad y recuperación jurídica verificada (RAG).
 
-El `OllamaAdapter` y `LLMPort` que ya existían en el commit remoto se conservan sin
-modificaciones. No se importan ni instancian al iniciar la aplicación PMV1. Su contrato
-antiguo de texto/prompt requerirá adaptación por el responsable de la integración;
-el controller PMV1 utiliza exclusivamente el puerto estructurado y su mock.
+`Container` configura `OllamaAdapter` al iniciar, sin conectarse hasta generar.
+El puerto `LLMPort` recibe prompt de datos, instrucciones de sistema y esquema JSON.
+El mock sigue siendo inyectable para pruebas, sin cambiar el comportamiento de producción.
 
 ## Interfaz web PMV 1
 

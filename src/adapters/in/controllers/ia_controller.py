@@ -34,7 +34,8 @@ def validar(solicitud_id: UUID, request: ValidarPrediccionRequest, usuario: Usua
 
 
 @router.post("/{solicitud_id}/generar-borrador", response_model=InformeResponse, status_code=201,
-             summary="Generar y guardar un borrador MOCK; no llama a Ollama")
+             summary="Generar con Ollama local y guardar según las secciones de la plantilla",
+             description="Usa el contexto confirmado. No verifica fuentes jurídicas. Permite reintentar reservas vencidas; una generación activa devuelve 409.")
 def generar(solicitud_id: UUID, request: GenerarBorradorRequest, usuario: Usuario, deps: Dependencias):
     informe = deps.generar_borrador.ejecutar(solicitud_id, usuario, request.instrucciones)
     return representar_informe(informe)

@@ -1,0 +1,12 @@
+{
+  "asunto": "DEMO: solicitud de inspección de un parque, sin resultados registrados",
+  "datos": {
+    "referencia_documento": "DEMO-OLLAMA-SIN-RESULTADOS",
+    "fecha": "2026-09-30",
+    "antecedentes": "Se ha solicitado una inspección de un parque de prueba. No se ha registrado la realización de la inspección.",
+    "objetivo": "Preparar un borrador que identifique la información pendiente para evaluar la solicitud.",
+    "detalle": "No se dispone de resultados de inspección, mediciones, fotografías ni hallazgos. El estado del césped, limpieza e infraestructura no ha sido informado.",
+    "conclusiones": "Pendientes de verificación; no existen resultados que permitan concluir el estado del parque.",
+    "recomendaciones": "Pendientes de contar con información verificada; no se han indicado acciones de mantenimiento."
+  }
+}

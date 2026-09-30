@@ -1,0 +1,86 @@
+{
+  "fecha": "2026-09-30",
+  "alcance": "Datos ficticios. API FastAPI con predictor sklearn real y Ollama local; PostgreSQL aislado, sin Supabase/Auth reales.",
+  "resultados": [
+    {
+      "entorno": "API memory, datos ficticios, predictor sklearn real, Ollama local real",
+      "modelo": "qwen2.5:7b",
+      "segundos": 3.482,
+      "plantilla": "Informe Técnico – Piloto NAXJI (DEMO)",
+      "secciones": [
+        {
+          "clave": "antecedentes",
+          "titulo": "Antecedentes",
+          "obligatoria": true
+        },
+        {
+          "clave": "objetivo",
+          "titulo": "Objetivo del informe",
+          "obligatoria": true
+        },
+        {
+          "clave": "analisis_tecnico",
+          "titulo": "Análisis técnico",
+          "obligatoria": true
+        },
+        {
+          "clave": "conclusiones",
+          "titulo": "Conclusiones",
+          "obligatoria": true
+        },
+        {
+          "clave": "recomendaciones",
+          "titulo": "Recomendaciones",
+          "obligatoria": false
+        }
+      ],
+      "contenido": {
+        "antecedentes": "Se ha solicitado una inspección de un parque de prueba. No se ha registrado la realización de la inspección.",
+        "objetivo": "Realizar una inspección técnica del parque solicitado para evaluar su estado actual.",
+        "analisis_tecnico": "Pendiente de verificación: Se requiere recabar información sobre el estado del césped, limpieza e infraestructura del parque.",
+        "conclusiones": "Pendiente de verificación: No se dispone de resultados de inspección, mediciones, fotografías ni hallazgos para emitir conclusiones.",
+        "recomendaciones": "Pendiente de verificación: Se recomienda recabar información adicional para evaluar el estado del parque y determinar si son necesarias acciones correctivas."
+      }
+    },
+    {
+      "entorno": "API postgres, datos ficticios, predictor sklearn real, Ollama local real",
+      "modelo": "qwen2.5:7b",
+      "segundos": 3.289,
+      "plantilla": "Informe Técnico – Piloto NAXJI",
+      "secciones": [
+        {
+          "clave": "antecedentes",
+          "titulo": "Antecedentes",
+          "obligatoria": true
+        },
+        {
+          "clave": "objetivo",
+          "titulo": "Objetivo del informe",
+          "obligatoria": true
+        },
+        {
+          "clave": "analisis_tecnico",
+          "titulo": "Análisis técnico",
+          "obligatoria": true
+        },
+        {
+          "clave": "conclusiones",
+          "titulo": "Conclusiones",
+          "obligatoria": true
+        },
+        {
+          "clave": "recomendaciones",
+          "titulo": "Recomendaciones",
+          "obligatoria": false
+        }
+      ],
+      "contenido": {
+        "antecedentes": "Se ha solicitado una inspección de un parque de prueba. No se ha registrado la realización de la inspección.",
+        "objetivo": "Preparar un borrador que identifique la información pendiente para evaluar la solicitud.",
+        "analisis_tecnico": "No se dispone de resultados de inspección, mediciones, fotografías ni hallazgos. El estado del césped, limpieza e infraestructura no ha sido informado.",
+        "conclusiones": "Pendientes de verificación; no existen resultados que permitan concluir el estado del parque.",
+        "recomendaciones": "Pendientes de contar con información verificada; no se han indicado acciones de mantenimiento."
+      }
+    }
+  ]
+}

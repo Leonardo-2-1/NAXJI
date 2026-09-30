@@ -1,6 +1,7 @@
 
 from src.adapters.out.ai.sklearn_context_predictor import SklearnContextPredictor
 from src.adapters.out.ai.generador_borrador_ollama import GeneradorBorradorOllama
+from src.adapters.out.ai.ollama_adapter import OllamaAdapter
 from src.adapters.out.persistence.catalogo_repository_memory import CatalogoRepositoryMemory
 from src.adapters.out.persistence.informe_repository_memory import InformeRepositoryMemory
 from src.adapters.out.persistence.memoria import Memoria
@@ -109,7 +110,11 @@ class Container:
         self.generar_borrador = GenerarBorrador(
             self.servicios,
             self.informes,
-            generador if generador is not None else GeneradorBorradorOllama()
+            generador if generador is not None else GeneradorBorradorOllama(OllamaAdapter(
+                model=settings.ollama_model, base_url=settings.ollama_base_url,
+                timeout_seconds=settings.ollama_timeout_seconds,
+            )),
+            tiempo_maximo=settings.ollama_timeout_seconds,
         )
 
         self.obtener_informe = ObtenerInforme(

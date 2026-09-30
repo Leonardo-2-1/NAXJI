@@ -137,12 +137,16 @@ def test_ollama_recibe_estructura_y_valida_respuesta_sin_servicio(demo):
     secciones = secciones_desde_json(demo["secciones_salida"])
     plantilla = Plantilla(uuid4(), demo["nombre"], uuid4(), secciones_salida=secciones)
     contenido = {s.clave: "Texto de prueba" for s in secciones if s.obligatoria}
-    llm = Mock(generar=Mock(return_value=json.dumps(contenido)))
+    llm = Mock(model="modelo-de-prueba", generar=Mock(return_value=json.dumps(contenido)))
     generador = GeneradorBorradorOllama(llm)
     contexto = ContextoConfirmado(plantilla.tipo_informe_id, uuid4(), ())
     resultado = generador.generar("Asunto de prueba", plantilla, {}, contexto, "")
     assert resultado.contenido == contenido
-    assert json.dumps(demo["secciones_salida"], ensure_ascii=False, indent=2) in llm.generar.call_args.args[0]
+    esquema = llm.generar.call_args.kwargs["esquema"]
+    assert list(esquema["properties"]) == [s.clave for s in secciones]
+    assert esquema["required"] == [s.clave for s in secciones if s.obligatoria]
+    assert esquema["additionalProperties"] is False
+    assert resultado.modelo_ia == "modelo-de-prueba"
     for invalido in ["sin JSON", "{}", json.dumps({**contenido, "ajena": "No"})]:
         llm.generar.return_value = invalido
         with pytest.raises(ErrorGeneracion):

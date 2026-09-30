@@ -7,10 +7,20 @@ from src.domain.entities.plantilla import Plantilla
 
 
 @dataclass(frozen=True)
+class NormaConfirmada:
+    id: UUID
+    codigo: str | None
+    titulo: str
+
+
+@dataclass(frozen=True)
 class ContextoConfirmado:
     tipo_informe_id: UUID
     area_destino_id: UUID
     normativa_ids: tuple[UUID, ...]
+    tipo_informe_nombre: str | None = None
+    area_destino_nombre: str | None = None
+    normas: tuple[NormaConfirmada, ...] = ()
 
 
 @dataclass(frozen=True)

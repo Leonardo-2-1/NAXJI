@@ -28,7 +28,7 @@ def create_app(settings: Settings | None = None, container: Container | None = N
     app = FastAPI(
         title="NAXJI API", version="1.0.0",
         description=(f"Backend PMV1. Persistencia configurada: {settings.persistence_mode}. "
-                     "Predicción RF-IA-01 y generación de borradores simulada. "
+                     "Predicción RF-IA-01 y generación estructurada con Ollama local. "
                      "Los tokens demo solo están habilitados en memoria. PostgreSQL usa Supabase Auth."),
     )
     app.state.settings = settings
@@ -76,10 +76,15 @@ def create_app(settings: Settings | None = None, container: Container | None = N
 
     @app.exception_handler(ErrorDominio)
     async def error_dominio(request: Request, error: ErrorDominio):
+        if isinstance(error, ErrorGeneracion):
+            codigo = {"OLLAMA_NO_DISPONIBLE": 503, "OLLAMA_MODELO_NO_INSTALADO": 503,
+                      "OLLAMA_TIMEOUT": 504, "OLLAMA_RESPUESTA_INVALIDA": 502,
+                      "OLLAMA_ERROR": 502}.get(error.codigo, 500)
+            return JSONResponse(status_code=codigo,
+                                content={"detail": error.mensaje_publico, "codigo": error.codigo})
         codigo = {DatosInvalidos: 400, NoAutorizado: 403, NoEncontrado: 404,
                   ConflictoEstado: 409, ErrorGeneracion: 500}.get(type(error), 400)
-        mensaje = "No se pudo generar el borrador" if isinstance(error, ErrorGeneracion) else str(error)
-        return JSONResponse(status_code=codigo, content={"detail": mensaje})
+        return JSONResponse(status_code=codigo, content={"detail": str(error)})
 
     @app.exception_handler(Exception)
     async def error_no_controlado(request: Request, error: Exception):
