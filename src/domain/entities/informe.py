@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 
 from src.domain.entities.solicitud import ahora
 from src.domain.value_objects.estados import EstadoInforme, OrigenVersion
+from src.domain.value_objects.seccion_salida import SeccionSalida
 
 
 @dataclass
@@ -19,6 +20,8 @@ class VersionInforme:
     prompt_version: str | None = None
     resumen_cambios: str | None = None
     created_at: datetime = field(default_factory=ahora)
+    # Snapshot inmutable en cada versión. None identifica versiones anteriores al paso 3.
+    secciones_salida: list[SeccionSalida] | None = None
 
 
 @dataclass

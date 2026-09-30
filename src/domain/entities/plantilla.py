@@ -3,10 +3,12 @@ from typing import Any
 from uuid import UUID
 
 from src.domain.value_objects.estados import TipoDato
+from src.domain.value_objects.seccion_salida import SeccionSalida
 
 
 @dataclass
 class CampoPlantilla:
+    """Dato de entrada que completa el funcionario; no define una sección de salida."""
     id: UUID
     plantilla_id: UUID
     clave: str
@@ -28,3 +30,5 @@ class Plantilla:
     activa: bool = True
     campos: list[CampoPlantilla] = field(default_factory=list)
     descripcion: str | None = None
+    # El orden de la lista es el orden del documento. None conserva el contrato anterior.
+    secciones_salida: list[SeccionSalida] | None = None

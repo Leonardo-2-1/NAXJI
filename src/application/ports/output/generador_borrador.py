@@ -26,5 +26,11 @@ class GeneradorBorrador(ABC):
         self, asunto: str, plantilla: Plantilla, datos: dict[str, Any],
         contexto: ContextoConfirmado, instrucciones: str,
     ) -> ResultadoBorrador:
-        """Devuelve contenido JSON; ante fallos del proveedor lanza ErrorGeneracion."""
+        """Devuelve {clave_seccion: texto} conforme a plantilla.secciones_salida.
+
+        La aplicación entrega la estructura efectiva, ordenada y no vacía. Las
+        obligatorias deben ser texto no vacío; las opcionales pueden omitirse.
+        No devuelve encabezado ni metadatos: los incorpora la aplicación.
+        Ante fallos del proveedor lanza ErrorGeneracion.
+        """
         ...

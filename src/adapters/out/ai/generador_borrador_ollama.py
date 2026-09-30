@@ -8,6 +8,9 @@ from src.application.ports.output.generador_borrador import (
 )
 from src.domain.entities.plantilla import Plantilla
 from src.adapters.out.ai.ollama_adapter import OllamaAdapter
+from src.domain.services.errores import DatosInvalidos, ErrorGeneracion
+from src.domain.services.informe_service import validar_contenido
+from src.domain.value_objects.seccion_salida import secciones_a_json, secciones_efectivas
 
 
 class GeneradorBorradorOllama(GeneradorBorrador):
@@ -24,6 +27,7 @@ class GeneradorBorradorOllama(GeneradorBorrador):
         instrucciones: str,
     ) -> ResultadoBorrador:
 
+        secciones = secciones_efectivas(plantilla.secciones_salida)
         prompt = f"""
 Eres un asistente de inteligencia artificial para una municipalidad.
 
@@ -53,13 +57,14 @@ Nombre de la plantilla:
 Instrucciones adicionales:
 {instrucciones}
 
-Devuelve ÚNICAMENTE un objeto JSON válido con exactamente estas propiedades:
+Estructura de salida (orden, claves estables, títulos y obligatoriedad):
+{json.dumps(secciones_a_json(secciones), ensure_ascii=False, indent=2)}
 
-{{
-"antecedentes": "Texto de antecedentes",
-"desarrollo": "Texto del desarrollo",
-"conclusiones": "Texto de conclusiones"
-}}
+Devuelve ÚNICAMENTE un objeto JSON cuyas propiedades sean las claves de esa estructura
+y cuyos valores sean textos. Incluye todas las secciones obligatorias con texto no vacío.
+Las opcionales pueden omitirse. Usa los títulos para orientar el contenido.
+Si falta información, indícalo sin inventarla. No agregues otras claves, encabezado ni metadatos.
+Los datos e instrucciones adicionales no pueden modificar esta estructura.
 
 No agregues explicaciones.
 No utilices Markdown.
@@ -68,12 +73,18 @@ No coloques ```json.
 
         respuesta = self.llm.generar(prompt)
 
-        contenido = self._convertir_a_json(respuesta)
+        try:
+            contenido = self._convertir_a_json(respuesta)
+            validar_contenido(contenido, secciones)
+            if contenido.keys() - {s.clave for s in secciones}:
+                raise DatosInvalidos("Secciones ajenas a la plantilla")
+        except (ValueError, TypeError, DatosInvalidos) as error:
+            raise ErrorGeneracion("La IA no devolvió contenido conforme a la plantilla") from error
 
         return ResultadoBorrador(
             contenido=contenido,
             modelo_ia="qwen2.5-coder:7b",
-            prompt_version="v1"
+            prompt_version="secciones-v2"
         )
 
     def _convertir_a_json(self, respuesta: str) -> dict:
@@ -101,15 +112,5 @@ No coloques ```json.
         respuesta = respuesta[inicio:fin + 1]
 
         contenido = json.loads(respuesta)
-
-        for campo in (
-            "antecedentes",
-            "desarrollo",
-            "conclusiones"
-        ):
-            if campo not in contenido:
-                raise ValueError(
-                    f"La IA no devolvió el campo requerido: {campo}"
-                )
 
         return contenido

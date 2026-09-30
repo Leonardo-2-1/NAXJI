@@ -27,7 +27,7 @@ from src.infrastructure.configuration.database import DatabaseSettings
 class Container:
     """Composición explícita; PostgreSQL nunca cae silenciosamente a memoria."""
 
-    def __init__(self, settings=None, *, database_settings=None, predictor=None):
+    def __init__(self, settings=None, *, database_settings=None, predictor=None, generador=None):
         settings = settings or Settings.from_env()
         self.persistence_mode = settings.persistence_mode
 
@@ -109,7 +109,7 @@ class Container:
         self.generar_borrador = GenerarBorrador(
             self.servicios,
             self.informes,
-            GeneradorBorradorOllama()
+            generador if generador is not None else GeneradorBorradorOllama()
         )
 
         self.obtener_informe = ObtenerInforme(

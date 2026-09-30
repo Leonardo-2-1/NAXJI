@@ -6,11 +6,12 @@ from src.infrastructure.configuration.container import Container
 from src.infrastructure.configuration.settings import Settings
 from src.main import create_app
 from src.adapters.out.ai.context_predictor_mock import ContextPredictorMock
+from src.adapters.out.ai.generador_borrador_mock import GeneradorBorradorMock
 
 
 @pytest.fixture
 def deps():
-    return Container(Settings(), predictor=ContextPredictorMock())
+    return Container(Settings(), predictor=ContextPredictorMock(), generador=GeneradorBorradorMock())
 
 
 @pytest.fixture

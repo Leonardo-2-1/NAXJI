@@ -1,6 +1,8 @@
 import api from "./api";
+import { construirValidacion } from "./flujoInforme";
 
-export const obtenerContexto = async (id) => (await api.get(`/solicitudes/${id}/contexto`)).data;
+export const obtenerContexto = async (id, opciones = {}) =>
+  (await api.get(`/solicitudes/${id}/contexto`, opciones)).data;
 
 export const predecirContexto = async (solicitudId) => {
   const response = await api.post(
@@ -10,21 +12,8 @@ export const predecirContexto = async (solicitudId) => {
   return response.data;
 };
 
-export const validarPrediccion = async (
-  solicitudId,
-  prediccionId,
-  resultado,
-  correccion = {}
-) => {
-  const datos = {
-    prediccion_id: prediccionId,
-    resultado,
-  };
-
-  if (resultado === "CORREGIDA") {
-    datos.tipo_informe_id = correccion.tipoInformeId;
-    datos.area_destino_id = correccion.areaDestinoId;
-  }
+export const validarPrediccion = async (solicitudId, prediccion, seleccion, rechazar = false) => {
+  const datos = construirValidacion(prediccion, seleccion, rechazar);
 
   const response = await api.post(
     `/solicitudes/${solicitudId}/validar-prediccion`,

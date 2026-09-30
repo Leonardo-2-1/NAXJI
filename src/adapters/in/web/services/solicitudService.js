@@ -12,8 +12,8 @@ export const crearSolicitud = async (datos) => {
   return response.data;
 };
 
-export const obtenerSolicitud = async (solicitudId) => {
-  const response = await api.get(`/solicitudes/${solicitudId}`);
+export const obtenerSolicitud = async (solicitudId, opciones = {}) => {
+  const response = await api.get(`/solicitudes/${solicitudId}`, opciones);
   return response.data;
 };
 

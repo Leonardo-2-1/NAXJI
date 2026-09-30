@@ -1,0 +1,20 @@
+[
+  {
+    "nombre": "DEMO A — informe técnico piloto, sin validez institucional",
+    "secciones_salida": [
+      {"clave":"antecedentes","titulo":"Antecedentes","obligatoria":true},
+      {"clave":"objetivo","titulo":"Objetivo del informe","obligatoria":true},
+      {"clave":"analisis_tecnico","titulo":"Análisis técnico","obligatoria":true},
+      {"clave":"conclusiones","titulo":"Conclusiones","obligatoria":true},
+      {"clave":"recomendaciones","titulo":"Recomendaciones","obligatoria":false}
+    ]
+  },
+  {
+    "nombre": "DEMO B — ficha sintética exclusiva de pruebas, sin validez institucional",
+    "secciones_salida": [
+      {"clave":"resumen_prueba","titulo":"Síntesis demostrativa","obligatoria":true},
+      {"clave":"hallazgos_prueba","titulo":"Observaciones de prueba","obligatoria":true},
+      {"clave":"notas_prueba","titulo":"Notas opcionales de prueba","obligatoria":false}
+    ]
+  }
+]

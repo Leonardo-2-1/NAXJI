@@ -219,6 +219,7 @@ NORMATIVAS = [
 # ============================================================
 
 def plantillas_demo() -> list[Plantilla]:
+    from src.domain.value_objects.estructura_piloto import estructura_piloto
 
     resultado = []
 
@@ -231,6 +232,10 @@ def plantillas_demo() -> list[Plantilla]:
             f"{tipo.nombre} (DEMO)",
             tipo.id
         )
+        if tipo.codigo == "INFORME_TECNICO":
+            plantilla.nombre = "Informe Técnico – Piloto NAXJI (DEMO)"
+            plantilla.descripcion = "DEMOSTRACIÓN. No constituye un formato oficial municipal. Revisión humana obligatoria."
+            plantilla.secciones_salida = estructura_piloto()
 
         for orden, (
             clave,

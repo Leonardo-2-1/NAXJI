@@ -23,6 +23,7 @@ from src.domain.entities.informe import Informe, VersionInforme
 from src.domain.services.errores import ConflictoEstado, DatosInvalidos
 from src.domain.value_objects.estado_solicitud import EstadoSolicitud
 from src.domain.value_objects.estados import EstadoInforme, OrigenVersion, ResultadoValidacion, TipoDato
+from src.domain.value_objects.seccion_salida import secciones_desde_json, secciones_a_json
 from src.infrastructure.configuration.database import DatabaseSettings, database_error
 
 
@@ -78,6 +79,8 @@ class PostgresUnidadTrabajo(UnidadTrabajo):
 
 def entity(cls, row, **enums):
     values = {f.name: row[f.name] for f in fields(cls) if f.name in row}
+    if "secciones_salida" in values:
+        values["secciones_salida"] = secciones_desde_json(values["secciones_salida"])
     for name, enum in enums.items():
         values[name] = enum(values[name])
     for name in ("confianza", "confianza_tipo", "confianza_area"):
@@ -91,7 +94,10 @@ def save(connection, table, item, *, omit=(), json_fields=(), extra=None, insert
     values = {f.name: getattr(item, f.name) for f in fields(item) if f.name not in omit}
     values.update(extra or {})
     for key, value in values.items():
-        if key in json_fields:
+        if key == "secciones_salida":
+            # SQL NULL conserva el contrato anterior; JSON null no es una estructura.
+            values[key] = None if value is None else Jsonb(secciones_a_json(value))
+        elif key in json_fields:
             values[key] = Jsonb(value)
         elif isinstance(value, Enum):
             values[key] = value.value

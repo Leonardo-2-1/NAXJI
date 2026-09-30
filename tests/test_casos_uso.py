@@ -147,9 +147,10 @@ def test_corregir_contexto_usa_seleccion_usuario_en_generacion(deps, usuario):
     plantilla = next(p for p in deps.plantillas.listar() if p.tipo_informe_id == tipo.id)
     deps.actualizar_solicitud.ejecutar(s.id, usuario, {"plantilla_id": plantilla.id})
     deps.guardar_valores.ejecutar(s.id, usuario, {c.id: "Datos" for c in plantilla.campos if c.obligatorio})
-    informe = deps.generar_borrador.ejecutar(s.id, usuario)
-    contexto = informe.versiones[0].contenido["contexto"]
-    assert contexto == {"tipo_informe_id": str(tipo.id), "area_destino_id": str(area.id), "normativa_ids": []}
+    generador = Mock(spec=GeneradorPort, wraps=deps.generar_borrador.generador)
+    GenerarBorrador(deps.servicios, deps.informes, generador).ejecutar(s.id, usuario)
+    contexto = generador.generar.call_args.args[3]
+    assert (contexto.tipo_informe_id, contexto.area_destino_id, contexto.normativa_ids) == (tipo.id, area.id, ())
     assert deps.predicciones.ultima(s.id).tipo_informe_predicho_id == p.tipo_informe_predicho_id
 
 

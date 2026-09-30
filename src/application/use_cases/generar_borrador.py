@@ -1,4 +1,6 @@
 from uuid import UUID
+from copy import deepcopy
+from dataclasses import replace
 
 from src.application.ports.output.generador_borrador import ContextoConfirmado, GeneradorBorrador
 from src.application.ports.output.informe_repository import InformeRepository
@@ -10,6 +12,7 @@ from src.domain.services.informe_service import validar_contenido
 from src.domain.services.solicitud_service import SolicitudService
 from src.domain.value_objects.estado_solicitud import EstadoSolicitud
 from src.domain.value_objects.estados import OrigenVersion, ResultadoValidacion
+from src.domain.value_objects.seccion_salida import secciones_efectivas
 
 
 class GenerarBorrador:
@@ -31,6 +34,7 @@ class GenerarBorrador:
                 raise ConflictoEstado("Debe confirmar o corregir el contexto antes de generar")
             self.s.validar_referencias(solicitud)
             plantilla = self.s.plantilla(solicitud.plantilla_id)
+            secciones = secciones_efectivas(plantilla.secciones_salida)
             SolicitudService.validar_obligatorios(solicitud, plantilla)
             self.s.recalcular_estado(solicitud)
             if solicitud.estado != EstadoSolicitud.LISTA_PARA_GENERAR:
@@ -41,7 +45,12 @@ class GenerarBorrador:
             datos = {claves[v.campo_plantilla_id]: v.valor for v in solicitud.valores}
             contexto = ContextoConfirmado(solicitud.tipo_informe_id, solicitud.area_destino_id,
                                            tuple(n.normativa_id for n in p.normativas if n.aceptada))
-            resultado = self.generador.generar(solicitud.asunto, plantilla, datos, contexto, instrucciones)
+            resultado = self.generador.generar(
+                solicitud.asunto, replace(plantilla, secciones_salida=deepcopy(secciones)), datos, contexto, instrucciones,
+            )
+            validar_contenido(resultado.contenido, secciones)
+            if resultado.contenido.keys() - {s.clave for s in secciones}:
+                raise DatosInvalidos("El generador devolvió secciones ajenas a la plantilla")
             areas = {a.id: a.nombre for a in self.s.catalogos.areas()}
             resultado.contenido['encabezado'] = {
                 'asunto': solicitud.asunto,
@@ -49,11 +58,11 @@ class GenerarBorrador:
                 'area_destino': areas.get(solicitud.area_destino_id),
                 'autor_id': str(solicitud.usuario_id),
             }
-            validar_contenido(resultado.contenido)
             informe = Informe(solicitud.id, plantilla.id, usuario.id, titulo=solicitud.asunto)
             informe.versiones.append(VersionInforme(
                 informe.id, 1, resultado.contenido, OrigenVersion.IA, usuario.id,
                 modelo_ia=resultado.modelo_ia, prompt_version=resultado.prompt_version,
+                secciones_salida=deepcopy(secciones),
             ))
             self.informes.guardar(informe)
             solicitud.estado = EstadoSolicitud.GENERADA

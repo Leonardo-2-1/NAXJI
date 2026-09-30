@@ -3,7 +3,9 @@ from uuid import UUID
 from pydantic import JsonValue
 
 from src.domain.value_objects.estados import TipoDato
+from src.domain.value_objects.seccion_salida import secciones_efectivas
 from .base import ResponseModel
+from .seccion_response import SeccionSalidaResponse
 
 
 class CatalogoResponse(ResponseModel):
@@ -21,6 +23,17 @@ class PlantillaResponse(ResponseModel):
     version: int
     activa: bool
     descripcion: str | None = None
+    secciones_salida: list[SeccionSalidaResponse]
+    estructura_legacy: bool
+
+
+def representar_plantilla(plantilla) -> PlantillaResponse:
+    return PlantillaResponse(
+        id=plantilla.id, nombre=plantilla.nombre, tipo_informe_id=plantilla.tipo_informe_id,
+        area_id=plantilla.area_id, version=plantilla.version, activa=plantilla.activa,
+        descripcion=plantilla.descripcion, secciones_salida=secciones_efectivas(plantilla.secciones_salida),
+        estructura_legacy=plantilla.secciones_salida is None,
+    )
 
 
 class AreaResponse(CatalogoResponse):

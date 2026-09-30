@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from src.infrastructure.dependencies import Dependencias, Usuario
 from ..schemas.catalogo_response import AreaResponse, CampoResponse, CatalogoResponse, PlantillaResponse
+from ..schemas.catalogo_response import representar_plantilla
 from ..schemas.error_response import RESPUESTAS_ERROR
 
 
@@ -22,7 +23,7 @@ def areas(usuario: Usuario, deps: Dependencias):
 
 @router.get("/plantillas", response_model=list[PlantillaResponse])
 def plantillas(usuario: Usuario, deps: Dependencias, tipo_informe_id: UUID | None = None):
-    return deps.consultar_catalogos.plantillas(usuario, tipo_informe_id)
+    return [representar_plantilla(p) for p in deps.consultar_catalogos.plantillas(usuario, tipo_informe_id)]
 
 
 @router.get("/plantillas/{plantilla_id}/campos", response_model=list[CampoResponse])

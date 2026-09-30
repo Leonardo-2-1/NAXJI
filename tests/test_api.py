@@ -48,7 +48,7 @@ def test_flujo_completo_swagger_y_catalogos(client):
     informe = r.json()
     assert informe["estado"] == "BORRADOR"
     assert informe["modelo_ia"].startswith("MOCK_")
-    assert informe["contenido"]["instrucciones"] == "Sea breve"
+    assert {s["clave"] for s in informe["secciones_salida"]} == set(informe["contenido"]) - {"encabezado"}
     assert client.get(f"/solicitudes/{sid}").json()["estado"] == "GENERADA"
     iid = informe["informe_id"]
     contenido = {**informe["contenido"], "conclusiones": "Revisión del funcionario"}
