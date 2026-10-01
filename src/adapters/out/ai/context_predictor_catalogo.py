@@ -2,6 +2,8 @@
 from src.application.ports.output.context_predictor import ContextPredictor
 from src.adapters.out.persistence.datos_demo import TIPOS, AREAS, NORMATIVAS
 from src.domain.services.errores import DatosInvalidos
+from src.domain.entities.prediccion_contexto import NormativaPredicha
+from math import isfinite
 
 
 class ContextPredictorCatalogo(ContextPredictor):
@@ -36,16 +38,38 @@ class ContextPredictorCatalogo(ContextPredictor):
         aliases = self.AREAS_MDT if any(a.codigo.startswith('MDT_') for a in areas if a.codigo) else {}
         result.area_destino_predicha_id = self.resolve(
             result.area_destino_predicha_id, AREAS, areas, aliases)
-        warnings, resolved = [], []
+        warnings, resolved, temas, evidencias = [], {}, [], {}
+        etiquetas = {n.id: n for n in NORMATIVAS}
+        codigos = [etiquetas[n.normativa_id].codigo for n in result.normativas if n.normativa_id in etiquetas]
+        correspondencias = self.catalogos.correspondencias_normativas(codigos)
         for norma in result.normativas:
-            code = next((r.codigo for r in NORMATIVAS if r.id == norma.normativa_id), None)
-            real = self.catalogos.normativa_por_codigo(code) if code else None
-            if real is None or not real.activo:
-                warnings.append("Contexto normativo pendiente de revisión institucional: " + (code or 'categoría desconocida'))
+            tema = etiquetas.get(norma.normativa_id)
+            if tema is None:
+                warnings.append("Tema normativo desconocido; correspondencia documental pendiente de revisión.")
                 continue
-            norma.normativa_id = real.id
-            resolved.append(norma)
-        result.normativas = resolved
+            if norma.confianza is not None and (not isfinite(norma.confianza) or not 0 <= norma.confianza <= 1):
+                raise DatosInvalidos("La confianza temática debe estar entre 0 y 1")
+            asociadas = [c for c in correspondencias if c.etiqueta == tema.codigo and c.elegible()]
+            ids = []
+            for c in asociadas:
+                nid = c.normativa.id
+                if str(nid) not in ids:
+                    ids.append(str(nid))
+                if nid not in resolved:
+                    resolved[nid] = NormativaPredicha(nid, norma.confianza, len(resolved) + 1)
+                elif norma.confianza is not None:
+                    anterior = resolved[nid].confianza
+                    resolved[nid].confianza = max(anterior, norma.confianza) if anterior is not None else norma.confianza
+                evidencias.setdefault(str(nid), []).append({**c.evidencia(), "confianza_tema": norma.confianza})
+            temas.append({"codigo": tema.codigo, "etiqueta": tema.titulo, "confianza": norma.confianza,
+                          "normativa_ids": ids})
+            if not ids:
+                warnings.append(f"Tema identificado: {tema.codigo}. No existe una norma verificable asociada; revisión documental pendiente.")
+        result.normativas = list(resolved.values())
+        result.parametros.update({"mapeo_normativo_version": 1, "temas_normativos": temas,
+                                  "correspondencias_normativas": evidencias})
+        if temas:
+            warnings.append("La confianza corresponde al tema detectado; no acredita vigencia ni aplicabilidad jurídica. Confirme cada referencia documental para este caso.")
         result.parametros['advertencias_catalogo'] = warnings
         if aliases:
             result.parametros['advertencias_catalogo'].append(

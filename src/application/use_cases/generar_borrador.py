@@ -17,6 +17,7 @@ from src.domain.services.solicitud_service import SolicitudService
 from src.domain.value_objects.estado_solicitud import EstadoSolicitud
 from src.domain.value_objects.estados import OrigenVersion, ResultadoValidacion
 from src.domain.value_objects.seccion_salida import secciones_efectivas
+from src.application.use_cases.verificar_referencias_normativas import verificar_referencias_normativas
 
 
 logger = logging.getLogger(__name__)
@@ -57,6 +58,8 @@ class GenerarBorrador:
                 self._restaurar_estado(solicitud)
 
     def _contexto(self, solicitud, prediccion):
+        verificar_referencias_normativas(self.s.catalogos, prediccion,
+                                        {n.normativa_id for n in prediccion.normativas if n.aceptada})
         tipos = {t.id: t.nombre for t in self.s.catalogos.tipos_informe()}
         areas = {a.id: a.nombre for a in self.s.catalogos.areas()}
         normas = []
@@ -148,6 +151,8 @@ class GenerarBorrador:
                         or self.s.predicciones.ultima(actual.id) != prediccion
                         or actual != solicitud):
                     raise ConflictoEstado("La solicitud, el contexto o la plantilla cambiaron durante la generación; reintente")
+                verificar_referencias_normativas(self.s.catalogos, prediccion,
+                                                {n.normativa_id for n in prediccion.normativas if n.aceptada})
                 informe = Informe(actual.id, plantilla.id, usuario.id, titulo=actual.asunto)
                 informe.versiones.append(VersionInforme(
                     informe.id, 1, contenido, OrigenVersion.IA, usuario.id,

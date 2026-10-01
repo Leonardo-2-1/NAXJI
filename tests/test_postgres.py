@@ -19,6 +19,7 @@ from src.adapters.out.ai.context_predictor_catalogo import ContextPredictorCatal
 from src.adapters.out.persistence.datos_demo import TIPOS, AREAS, NORMATIVAS
 from src.domain.services.errores import DatosInvalidos
 from src.main import create_app
+from tests.fixtures.normativa_demo import correspondencia_demo
 
 
 @pytest.fixture
@@ -107,8 +108,9 @@ def test_predictor_resolves_real_ids_and_rejects_missing_catalogs():
     catalogos = Mock()
     catalogos.tipos_informe.return_value = [replace(t, id=uuid4()) for t in TIPOS]
     catalogos.areas.return_value = [replace(a, id=uuid4()) for a in AREAS]
-    norma = replace(NORMATIVAS[0], id=uuid4())
-    catalogos.normativa_por_codigo.return_value = norma
+    correspondencia = correspondencia_demo()
+    norma = correspondencia.normativa
+    catalogos.correspondencias_normativas.return_value = [correspondencia]
     predictor = ContextPredictorCatalogo(ContextPredictorMock(), catalogos)
     prediction = predictor.predecir("prueba", uuid4())
     assert prediction.tipo_informe_predicho_id == catalogos.tipos_informe.return_value[2].id

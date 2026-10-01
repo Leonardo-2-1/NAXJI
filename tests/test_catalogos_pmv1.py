@@ -67,7 +67,7 @@ def test_mapeo_mdt_sin_inventar_normativas_y_categoria_ausente():
     repo.tipos_informe.return_value = [replace(t, id=uuid4()) for t in TIPOS]
     area = replace(AREAS[0], id=uuid4(), codigo='MDT_SGGA', nombre='Subgerencia de Gestión Ambiental')
     repo.areas.return_value = [area]
-    repo.normativa_por_codigo.return_value = None
+    repo.correspondencias_normativas.return_value = []
     adapter = ContextPredictorCatalogo(ContextPredictorMock(), repo)
     p = adapter.predecir('Evaluación parque', uuid4())
     assert p.area_destino_predicha_id == area.id

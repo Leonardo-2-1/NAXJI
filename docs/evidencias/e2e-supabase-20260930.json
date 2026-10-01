@@ -1,0 +1,350 @@
+{
+  "commit_main": "b639d5d417956b7b81413d85ec6f22b06bb5a98a",
+  "date": "2026-09-30",
+  "migration_read_only": {
+    "plantillas_secciones_salida": "jsonb",
+    "versiones_informe_secciones_salida": "jsonb",
+    "pilot_section_count": 5
+  },
+  "api_autenticada": {
+    "scope": "Real HTTP API via React proxy, Supabase Auth/PostgreSQL and local Ollama. Browser UI not available.",
+    "http": [
+      {
+        "step": "login_supabase",
+        "status": 200,
+        "seconds": 5.868
+      },
+      {
+        "step": "perfil_autorizado",
+        "status": 200,
+        "seconds": 4.651
+      },
+      {
+        "step": "catalogo_tipos",
+        "status": 200,
+        "seconds": 6.138
+      },
+      {
+        "step": "catalogo_areas",
+        "status": 200,
+        "seconds": 6.273
+      },
+      {
+        "step": "catalogo_plantillas",
+        "status": 200,
+        "seconds": 6.593
+      },
+      {
+        "step": "campos_piloto",
+        "status": 200,
+        "seconds": 5.518
+      },
+      {
+        "step": "PRINCIPAL_crear_solo_asunto",
+        "status": 201,
+        "seconds": 8.274
+      },
+      {
+        "step": "PRINCIPAL_prediccion_sklearn",
+        "status": 200,
+        "seconds": 9.3
+      },
+      {
+        "step": "PRINCIPAL_corregir_sin_normas",
+        "status": 200,
+        "seconds": 11.039
+      },
+      {
+        "step": "PRINCIPAL_recuperar_descarte",
+        "status": 200,
+        "seconds": 8.014
+      },
+      {
+        "step": "PRINCIPAL_guardar_campos",
+        "status": 200,
+        "seconds": 11.607
+      },
+      {
+        "step": "PRINCIPAL_recuperar_datos",
+        "status": 200,
+        "seconds": 6.179
+      },
+      {
+        "step": "PRINCIPAL_generar_ollama",
+        "status": 201,
+        "seconds": 21.925
+      },
+      {
+        "step": "guardar_version_2",
+        "status": 200,
+        "seconds": 6.165
+      },
+      {
+        "step": "renovar_sesion_real",
+        "status": 200,
+        "seconds": 4.763
+      },
+      {
+        "step": "recuperar_version_2",
+        "status": 200,
+        "seconds": 7.663
+      },
+      {
+        "step": "recuperar_solicitud_generada",
+        "status": 200,
+        "seconds": 5.308
+      },
+      {
+        "step": "login_supabase",
+        "status": 200,
+        "seconds": 4.839
+      },
+      {
+        "step": "perfil_autorizado",
+        "status": 200,
+        "seconds": 4.329
+      },
+      {
+        "step": "catalogo_tipos",
+        "status": 200,
+        "seconds": 5.255
+      },
+      {
+        "step": "catalogo_areas",
+        "status": 200,
+        "seconds": 6.464
+      },
+      {
+        "step": "catalogo_plantillas",
+        "status": 200,
+        "seconds": 6.656
+      },
+      {
+        "step": "campos_piloto",
+        "status": 200,
+        "seconds": 5.916
+      },
+      {
+        "step": "revalidar_datos_compatibles",
+        "status": 200,
+        "seconds": 6.361
+      },
+      {
+        "step": "revalidar_version_2_nueva_sesion",
+        "status": 200,
+        "seconds": 7.313
+      },
+      {
+        "step": "REINTENTO_crear_solo_asunto",
+        "status": 201,
+        "seconds": 8.065
+      },
+      {
+        "step": "REINTENTO_prediccion_sklearn",
+        "status": 200,
+        "seconds": 11.525
+      },
+      {
+        "step": "REINTENTO_corregir_sin_normas",
+        "status": 200,
+        "seconds": 9.784
+      },
+      {
+        "step": "REINTENTO_recuperar_descarte",
+        "status": 200,
+        "seconds": 8.779
+      },
+      {
+        "step": "REINTENTO_guardar_campos",
+        "status": 200,
+        "seconds": 13.486
+      },
+      {
+        "step": "REINTENTO_recuperar_datos",
+        "status": 200,
+        "seconds": 5.345
+      },
+      {
+        "step": "ollama_url_aislada_falla",
+        "status": 503,
+        "seconds": 14.017
+      },
+      {
+        "step": "estado_tras_fallo",
+        "status": 200,
+        "seconds": 5.94
+      },
+      {
+        "step": "REINTENTO_generar_ollama",
+        "status": 201,
+        "seconds": 17.455
+      },
+      {
+        "step": "cerrar_sesion_de_prueba",
+        "status": 204,
+        "seconds": 2.61
+      }
+    ],
+    "records": [
+      {
+        "scenario": "PRINCIPAL",
+        "solicitud_id": "3f97b19b-9f03-479e-934b-f7d59287fd9d",
+        "prediccion_id": "a2ba4717-0704-4773-9978-abbb58bcb12a",
+        "predictor": {
+          "modelo": "SKLEARN_RF_IA_01",
+          "version": "RF-IA-01-200CASOS-v1",
+          "es_mock": false,
+          "normas_propuestas": 0
+        },
+        "normas_descartadas_recuperadas": 0,
+        "generation_seconds": 21.926,
+        "informe_id": "6283b8b3-8213-4c83-ad39-5a16b7119fe6",
+        "modelo_ia": "qwen2.5:7b",
+        "encabezado_verificado_sin_registrar_autor": true,
+        "secciones": [
+          "antecedentes",
+          "objetivo",
+          "analisis_tecnico",
+          "conclusiones",
+          "recomendaciones"
+        ],
+        "contenido_ficticio": {
+          "antecedentes": "Se ha solicitado una inspección de un parque de prueba. No se ha registrado la realización de la inspección.",
+          "objetivo": "Preparar un borrador que identifique la información pendiente para evaluar la solicitud.",
+          "analisis_tecnico": "Pendientes de verificación: no se dispone de resultados de inspección, mediciones, fotografías ni hallazgos. El estado del césped, limpieza e infraestructura no ha sido informado.",
+          "conclusiones": "Pendientes de verificación; no existen resultados que permitan concluir el estado del parque.",
+          "recomendaciones": "Pendientes de contar con información verificada; no se han indicado acciones de mantenimiento."
+        },
+        "version_recuperada": 2
+      },
+      {
+        "scenario": "REINTENTO",
+        "solicitud_id": "61fc6f36-da7a-44fb-b43d-85b84d5c4b0a",
+        "prediccion_id": "5aa26622-bbe9-4dee-baa1-1df6cd4f4a82",
+        "predictor": {
+          "modelo": "SKLEARN_RF_IA_01",
+          "version": "RF-IA-01-200CASOS-v1",
+          "es_mock": false,
+          "normas_propuestas": 0
+        },
+        "normas_descartadas_recuperadas": 0,
+        "failure_code": "OLLAMA_NO_DISPONIBLE",
+        "estado_tras_fallo": "LISTA_PARA_GENERAR",
+        "generation_seconds": 17.457,
+        "informe_id": "e4a9181d-8c04-4b52-af5f-f799921ec7bd",
+        "modelo_ia": "qwen2.5:7b",
+        "encabezado_verificado_sin_registrar_autor": true,
+        "secciones": [
+          "antecedentes",
+          "objetivo",
+          "analisis_tecnico",
+          "conclusiones",
+          "recomendaciones"
+        ],
+        "contenido_ficticio": {
+          "antecedentes": "Se ha solicitado una inspección de un parque de prueba. No se ha registrado la realización de la inspección.",
+          "objetivo": "Preparar un borrador que identifique la información pendiente para evaluar la solicitud.",
+          "analisis_tecnico": "No se dispone de resultados de inspección, mediciones, fotografías ni hallazgos. El estado del césped, limpieza e infraestructura no ha sido informado.",
+          "conclusiones": "Pendientes de verificación; no existen resultados que permitan concluir el estado del parque.",
+          "recomendaciones": "Pendientes de contar con información verificada; no se han indicado acciones de mantenimiento."
+        }
+      }
+    ],
+    "checks": {
+      "authorized_role": true,
+      "api_flow_completed": true
+    },
+    "verification_note": "La recuperación compara valores por campo, no timestamps que los triggers actualizan al guardar el estado. Se revalidó la solicitud ya creada sin duplicarla."
+  },
+  "verificacion_sql_read_only": [
+    {
+      "solicitud_id": "3f97b19b-9f03-479e-934b-f7d59287fd9d",
+      "informe_id": "6283b8b3-8213-4c83-ad39-5a16b7119fe6",
+      "estado": "GENERADA",
+      "values_match_fixture": true,
+      "normas_propuestas": 0,
+      "normas_aceptadas": 0,
+      "informe_unico": true,
+      "versiones": [
+        {
+          "id": "ca3834c2-6761-43de-9697-fe7a8f8516a4",
+          "numero": 1,
+          "modelo_ia": "qwen2.5:7b",
+          "origen": "IA"
+        },
+        {
+          "id": "8d6e7c02-0eb4-4a83-b41c-26472284780e",
+          "numero": 2,
+          "modelo_ia": null,
+          "origen": "USUARIO"
+        }
+      ],
+      "estructura_y_contenido_persistidos": true
+    },
+    {
+      "solicitud_id": "61fc6f36-da7a-44fb-b43d-85b84d5c4b0a",
+      "informe_id": "e4a9181d-8c04-4b52-af5f-f799921ec7bd",
+      "estado": "GENERADA",
+      "values_match_fixture": true,
+      "normas_propuestas": 0,
+      "normas_aceptadas": 0,
+      "informe_unico": true,
+      "versiones": [
+        {
+          "id": "964d571c-2368-40b1-b0a7-3883c927b504",
+          "numero": 1,
+          "modelo_ia": "qwen2.5:7b",
+          "origen": "IA"
+        }
+      ],
+      "estructura_y_contenido_persistidos": true
+    }
+  ],
+  "generador_auxiliar_read_only": {
+    "alcance": "Generador real con plantilla de Supabase leída en modo solo lectura. Sin sesión Auth, sin UI y sin guardar registros.",
+    "asunto": "PRUEBA NAXJI E2E 2026-09-30: inspección de parque ficticio sin resultados",
+    "modelo_ia": "qwen2.5:7b",
+    "secciones": [
+      "antecedentes",
+      "objetivo",
+      "analisis_tecnico",
+      "conclusiones",
+      "recomendaciones"
+    ],
+    "segundos": 15.927,
+    "error_url_aislada": "OLLAMA_NO_DISPONIBLE",
+    "reintento_directo_generador": "correcto; no verifica recuperación del estado persistido",
+    "contenido": {
+      "antecedentes": "Se ha solicitado una inspección de un parque de prueba. No se ha registrado la realización de la inspección.",
+      "objetivo": "Preparar un borrador que identifique la información pendiente para evaluar la solicitud.",
+      "analisis_tecnico": "No se dispone de resultados de inspección, mediciones, fotografías ni hallazgos. El estado del césped, limpieza e infraestructura no ha sido informado.",
+      "conclusiones": "Pendientes de verificación; no existen resultados que permitan concluir el estado del parque.",
+      "recomendaciones": "Pendientes de contar con información verificada; no se han indicado acciones de mantenimiento."
+    },
+    "ids_creados_supabase": []
+  },
+  "catalogo_normativo": {
+    "active_normas": 1,
+    "matching_predictor_codes": 0,
+    "predictor_norm_codes": 11,
+    "changed": false
+  },
+  "automated": {
+    "python_passed": 141,
+    "python_skipped": 15,
+    "frontend_passed": 14,
+    "lint": "passed",
+    "build": "passed"
+  },
+  "limits": [
+    "No browser was available to the UI tool. The HTTP workflow used the React proxy but did not operate the rendered interface.",
+    "No suggested norms can be discarded in cloud testing because no active normative catalog code matches the predictor. Empty selection was persisted.",
+    "httpx sent its own refresh cookie explicitly for the API check; real browser Secure cookie behavior was not tested."
+  ],
+  "cleanup": {
+    "failure_backend_stopped": true,
+    "normal_ollama_uninterrupted": true,
+    "private_env_files_unchanged": true,
+    "fictional_cloud_records_preserved": true
+  }
+}

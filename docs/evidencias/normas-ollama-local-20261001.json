@@ -1,0 +1,26 @@
+{
+  "entorno": "PostgreSQL efímero local; identidad ficticia; sklearn y Ollama reales, sin Supabase",
+  "modelo_ia": "qwen2.5:7b",
+  "segundos": 44.101,
+  "etiquetas": [
+    {
+      "codigo": "NORM_RESIDUOS",
+      "etiqueta": "Normativa municipal sobre gestión de residuos sólidos",
+      "confianza": 0.7866355612432672,
+      "documentos_propuestos": 2
+    }
+  ],
+  "codigos_propuestos": [
+    "PE_DL_1278",
+    "PE_DS_014_2017_MINAM"
+  ],
+  "codigo_aceptado": "PE_DL_1278",
+  "codigo_descartado": "PE_DS_014_2017_MINAM",
+  "contenido_ficticio": {
+    "antecedentes": "Se ha solicitado una inspección de un parque de prueba. No se ha registrado la realización de la inspección.",
+    "objetivo": "Preparar un borrador que identifique la información pendiente para evaluar la solicitud.",
+    "analisis_tecnico": "Pendientes de verificación: no existen resultados de inspección, mediciones, fotografías ni hallazgos. El estado del césped, limpieza e infraestructura no ha sido informado.",
+    "conclusiones": "Pendientes de verificación; no existen resultados que permitan concluir el estado del parque.",
+    "recomendaciones": "Pendientes de contar con información verificada; no se han indicado acciones de mantenimiento."
+  }
+}

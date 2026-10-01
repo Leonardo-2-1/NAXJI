@@ -6,6 +6,7 @@ from src.domain.entities.usuario_actual import UsuarioActual
 from src.domain.services.errores import ConflictoEstado, DatosInvalidos, NoEncontrado
 from src.domain.services.solicitud_service import SolicitudService
 from src.domain.value_objects.estados import ResultadoValidacion
+from src.application.use_cases.verificar_referencias_normativas import verificar_referencias_normativas
 
 
 class ValidarPrediccion:
@@ -41,6 +42,7 @@ class ValidarPrediccion:
             if resultado == ResultadoValidacion.ACEPTADA and seleccionadas != predichas:
                 raise DatosInvalidos("Use CORREGIDA para cambiar las normativas confirmadas")
             if resultado != ResultadoValidacion.RECHAZADA:
+                verificar_referencias_normativas(self.s.catalogos, p, seleccionadas)
                 solicitud.tipo_informe_id = tipo_informe_id or p.tipo_informe_predicho_id
                 solicitud.area_destino_id = area_destino_id or p.area_destino_predicha_id
                 # Al confirmar un contexto distinto se vuelve a elegir plantilla.

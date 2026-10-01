@@ -269,6 +269,15 @@ elimina solo bases con nombres aleatorios de prueba. No utiliza el Supabase del 
 
 ## Integración pendiente y contratos
 
+La correspondencia entre **temas del predictor** y **documentos normativos** es
+explícita y admite varias referencias por tema. Véase el
+[inventario y verificación de fuentes](docs/CORRESPONDENCIAS_NORMATIVAS.md), que
+incluye el contrato JSON, los límites de vigencia y el SQL propuesto para revisión.
+La migración y la semilla se probaron solo en PostgreSQL aislado; no se aplicaron
+a Supabase. Hasta su aplicación, las nuevas predicciones muestran los temas y
+advierten que no hay documentos verificables asociados. El modelo de 200 casos
+no cambia, y la confianza temática no acredita aplicabilidad jurídica.
+
 Consulte [docs/CONTRATOS_PMV1.md](docs/CONTRATOS_PMV1.md) y el
 [inventario de entrega](docs/ENTREGA_PMV1.md).
 

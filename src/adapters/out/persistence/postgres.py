@@ -2,7 +2,9 @@
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import fields
+from datetime import date
 from enum import Enum
+from uuid import UUID
 
 import psycopg
 from psycopg import sql
@@ -16,6 +18,7 @@ from src.application.ports.output.solicitud_repository import SolicitudRepositor
 from src.application.ports.output.prediccion_repository import PrediccionRepository
 from src.application.ports.output.informe_repository import InformeRepository
 from src.domain.entities.catalogo import TipoInforme, AreaMunicipal, Normativa
+from src.domain.entities.correspondencia_normativa import CorrespondenciaNormativa
 from src.domain.entities.plantilla import Plantilla, CampoPlantilla
 from src.domain.entities.solicitud import Solicitud, SolicitudValor
 from src.domain.entities.prediccion_contexto import PrediccionContexto, NormativaPredicha
@@ -123,6 +126,28 @@ class Repository:
 
 
 class CatalogoRepositoryPostgres(Repository, CatalogoRepository):
+    def correspondencias_normativas(self, etiquetas):
+        if not etiquetas:
+            return []
+        with self.uow.connection() as c:
+            # Despliegue aditivo: hasta aplicar la migración solo se muestran temas.
+            if c.execute("SELECT to_regclass('public.normativa_correspondencias') AS tabla").fetchone()["tabla"] is None:
+                return []
+            rows = c.execute("""SELECT m.*, to_jsonb(n) AS documento
+                FROM public.normativa_correspondencias m
+                JOIN public.normativas n ON n.id=m.normativa_id
+                WHERE m.etiqueta=ANY(%s) ORDER BY m.etiqueta,n.codigo,n.id""", (etiquetas,)).fetchall()
+            resultado = []
+            for row in rows:
+                documento = row.pop("documento")
+                documento["id"] = UUID(documento["id"])
+                # JSONB serializa fechas; las entidades conservan su tipo date.
+                for key in ("fecha_publicacion", "fecha_inicio_vigencia", "fecha_fin_vigencia"):
+                    if documento.get(key):
+                        documento[key] = date.fromisoformat(documento[key])
+                resultado.append(entity(CorrespondenciaNormativa, {**row, "normativa": entity(Normativa, documento)}))
+            return resultado
+
     def tipos_informe(self):
         with self.uow.connection() as c:
             return [entity(TipoInforme, r) for r in c.execute("SELECT * FROM public.tipos_informe ORDER BY codigo")]

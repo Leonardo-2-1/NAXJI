@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import EditorBorrador from "../components/EditorBorrador";
+import NormativasSugeridas from "../components/NormativasSugeridas";
+import PasosInforme from "../components/PasosInforme";
+import { progresoInforme } from "../services/progresoInforme";
 import { seccionesDePlantilla, validarSeccionesBorrador } from "../services/estructuraBorrador";
 
 import { mensajeError } from "../services/api";
@@ -60,6 +63,7 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
   const [operacion, setOperacion] = useState("");
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const [pasoElegido, setPasoElegido] = useState(null);
   const [vigencia] = useState(crearVigencia);
   const montado = useRef(false);
   const enCurso = useRef(false);
@@ -68,6 +72,16 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
   const contextoVigente = confirmada && asuntoPredicho === form.asunto.trim();
   const bloqueada = cargando || cargaFallida || !elaboracionPermitida || !esEditable(solicitud) || Boolean(informe);
   const ocupado = Boolean(operacion);
+  const progreso = progresoInforme({ form, prediccion, contextoVigente, asuntoPredicho,
+    plantillas, campos, idCampos, estadoPlantillas, solicitud, informe });
+  const pasoDisponible = cargando || cargaFallida ? 1 : progreso.pasoDisponible;
+  const pasoActual = Math.min(pasoElegido ?? pasoDisponible, pasoDisponible);
+  const titulosPasos = ["Cuéntenos qué necesita", "Revise y confirme la propuesta", "Elija la plantilla y complete los datos", "Revise su borrador"];
+  const encabezadoPaso = useRef(null);
+
+  useEffect(() => {
+    if (!cargando) encabezadoPaso.current?.focus();
+  }, [pasoActual, cargando]);
 
   const cargarFormatos = useCallback(async (actual, anterior, vigente, opciones = {}) => {
     if (!vigente()) return;
@@ -198,6 +212,7 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
   }
 
   function cambiarAsunto(valor) {
+    setPasoElegido(1);
     vigencia.invalidar();
     setForm(prev => ({ ...prev, asunto: valor }));
     setPrediccion(null);
@@ -208,6 +223,7 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
   }
 
   function cambiarContexto(cambios) {
+    setPasoElegido(2);
     vigencia.invalidar();
     setForm(prev => ({ ...prev, ...cambios }));
     setConfirmada(false);
@@ -233,6 +249,7 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
       const resultado = await predecirContexto(actual.id);
       if (!vigente()) return;
       setPrediccion(resultado);
+      setPasoElegido(2);
       setAsuntoPredicho(asunto);
       setForm(prev => ({ ...prev, ...seleccionInicial(actual, resultado) }));
       setMensaje("Revise el tipo, el área y las normas sugeridas antes de confirmar.");
@@ -257,6 +274,7 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
         return;
       }
       setForm(prev => ({ ...prev, ...seleccionInicial(actual, respuesta) }));
+      setPasoElegido(3);
       setMensaje(datos.resultado === "ACEPTADA" ? "Propuesta completa confirmada." : "Correcciones y selección de normas confirmadas.");
       await cargarFormatos(actual, form, vigente);
     });
@@ -264,6 +282,7 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
 
   function cambiarPlantilla(id) {
     if (ocupado || bloqueada) return;
+    setPasoElegido(3);
     setForm(prev => ({ ...prev, plantillaId: id, valores: {} }));
     setIdCampos("");
     setCampos([]);
@@ -306,7 +325,10 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
     if (bloqueada || !contextoVigente) return;
     ejecutar("guardar", async vigente => {
       await persistirDatos();
-      if (vigente()) setMensaje("Datos guardados correctamente.");
+      if (vigente()) {
+        setMensaje("Datos guardados correctamente. Ya puede generar el borrador.");
+        setPasoElegido(4);
+      }
     });
   }
 
@@ -366,6 +388,7 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
   function renderCampo(campo) {
     const props = {
       id: `campo-${campo.id}`, value: form.valores[campo.id] ?? "",
+      required: campo.obligatorio,
       onChange: e => setForm(prev => ({ ...prev, valores: { ...prev.valores, [campo.id]: e.target.value } })),
     };
     if (campo.tipo_dato === "textarea") return <textarea {...props} rows="4" />;
@@ -385,133 +408,185 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
   catch { /* Una propuesta incompleta se puede completar con los catálogos. */ }
 
   return <div className="nuevo-informe-page">
-    <div className="page-title"><h1>Nuevo informe</h1><p>Asunto → sugerencia y confirmación → plantilla y datos → borrador</p></div>
+    <div className="informe-intro">
+      <div><p className="informe-eyebrow">ESPACIO DE ELABORACIÓN</p>
+        <h1>Un informe, paso a paso.</h1>
+        <p>Empiece con el asunto. Revise la propuesta y transforme sus datos en un borrador.</p>
+      </div>
+      <span className="informe-insignia"><span aria-hidden="true">✦</span> Asistencia con IA · Revisión humana</span>
+    </div>
+    <PasosInforme actual={pasoActual} disponible={pasoDisponible} disabled={cargando || cargaFallida || ocupado}
+      onChange={setPasoElegido} />
+    <div className="informe-avisos">
     {!elaboracionPermitida && <p className="warning-message">Su rol solo permite consultar. Use un funcionario o administrador para elaborar.</p>}
-    {cargando && <p role="status">Recuperando catálogos y solicitud…</p>}
-    {ocupado && <p role="status">{({ analizar: "Analizando asunto…", confirmar: "Confirmando contexto…", campos: "Cargando campos…", guardar: "Guardando datos…", generar: "Generando borrador…", editar: "Guardando borrador…", abrir: "Recuperando borrador…" })[operacion]}</p>}
+    {cargando && <p className="informe-carga" role="status">Recuperando catálogos y solicitud…</p>}
+    {ocupado && <p className="informe-carga" role="status">{({ analizar: "Analizando asunto…", confirmar: "Confirmando contexto…", campos: "Cargando campos…", guardar: "Guardando datos…", generar: "Generando borrador… Puede tardar unos minutos.", editar: "Guardando borrador…", abrir: "Recuperando borrador…" })[operacion]}</p>}
     {error && <div className="error-message" role="alert">{error}</div>}
-    {cargaFallida && <button type="button" onClick={() => window.location.reload()}>Reintentar carga</button>}
+    {cargaFallida && <button type="button" className="btn-secondary" onClick={() => window.location.reload()}>Reintentar carga</button>}
     {mensaje && <div className="success-message" role="status">{mensaje}</div>}
-    {solicitud && <p>Solicitud: <code>{solicitud.id}</code> · Estado: {solicitud.estado}</p>}
     {solicitud && !esEditable(solicitud) && <p className="warning-message">Esta solicitud está en estado {solicitud.estado} y sus datos no admiten cambios.</p>}
+    </div>
 
-    <section className="card" aria-labelledby="etapa-asunto">
-      <h2 id="etapa-asunto">1. Asunto</h2>
-      <p className="card-help">Escriba el asunto para obtener una sugerencia. El tipo, destino y plantilla se eligen después.</p>
-      <label htmlFor="asunto">Asunto *</label>
-      <input id="asunto" type="text" value={form.asunto} onChange={e => cambiarAsunto(e.target.value)}
+    <div className="informe-espacio">
+    <div className="informe-trabajo">
+    <div className="informe-card-heading">
+      <p className="informe-eyebrow">PASO {pasoActual} DE 4</p>
+      <h2 tabIndex={-1} ref={encabezadoPaso} id="titulo-paso">{titulosPasos[pasoActual - 1]}</h2>
+      <p>Los campos marcados con * son obligatorios.</p>
+    </div>
+    <section id="panel-paso-1" className="informe-panel" hidden={pasoActual !== 1} aria-labelledby="titulo-paso">
+      <p className="card-help">Describa el propósito del informe. Con el asunto es suficiente para comenzar; elegirá el tipo, el destino y la plantilla después.</p>
+      <div className="form-group"><label htmlFor="asunto">Asunto *</label>
+      <textarea id="asunto" rows="4" required value={form.asunto} onChange={e => cambiarAsunto(e.target.value)}
+        aria-describedby="ayuda-asunto" placeholder="Escriba aquí el asunto de su informe…"
         disabled={bloqueada || (ocupado && !["analizar", "confirmar"].includes(operacion))} />
-      <button type="button" className="btn-primary" disabled={bloqueada || ocupado || !form.asunto.trim()} onClick={analizar}>Analizar asunto</button>
+      <p id="ayuda-asunto" className="hint-text">Incluya solo información que conozca. Podrá aportar más detalles en el paso de datos.</p></div>
+      <div className="informe-nota"><strong>Usted decide.</strong><p>La sugerencia del modelo es un punto de partida. Revísela y confírmela antes de continuar.</p></div>
+      <div className="informe-acciones"><button type="button" className="btn-primary" disabled={bloqueada || ocupado || !form.asunto.trim()} onClick={analizar}>{operacion === "analizar" ? "Analizando asunto…" : "Analizar asunto"}<span aria-hidden="true"> →</span></button></div>
     </section>
 
-    <section className="card" aria-labelledby="etapa-contexto">
-      <h2 id="etapa-contexto">2. Sugerencia y confirmación</h2>
+    <section id="panel-paso-2" className="informe-panel" hidden={pasoActual !== 2} aria-labelledby="titulo-paso">
       {!prediccion ? <p>Analice el asunto para revisar la propuesta.</p> : <>
+        <p className="card-help">Compruebe la sugerencia, ajuste el tipo y el área si es necesario, y elija las normas que desea confirmar.</p>
         {prediccion.advertencias?.map((aviso, indice) => <p className="warning-inline" role="alert" key={indice}>{aviso}</p>)}
         {prediccion.es_mock && <p className="warning-inline">Predicción de demostración; no corresponde al modelo real.</p>}
-        <p><strong>Tipo sugerido:</strong> {prediccion.tipo_informe?.nombre || "No disponible"} · {confianza(prediccion.tipo_informe?.confianza)}</p>
-        <p><strong>Área sugerida:</strong> {prediccion.area_destino?.nombre || "No disponible"} · {confianza(prediccion.area_destino?.confianza)}</p>
-        <p>Modelo: {prediccion.modelo} · {prediccion.version_modelo}</p>
-        <p>Validación guardada: {prediccion.resultado_validacion}. {contextoVigente ? "Contexto confirmado." : "Confirmación pendiente para continuar."}</p>
+        <div className="informe-sugerencias">
+          <div><span>Tipo sugerido</span><strong>{prediccion.tipo_informe?.nombre || "No disponible"}</strong><small>{confianza(prediccion.tipo_informe?.confianza)}</small></div>
+          <div><span>Área sugerida</span><strong>{prediccion.area_destino?.nombre || "No disponible"}</strong><small>{confianza(prediccion.area_destino?.confianza)}</small></div>
+        </div>
+        <p className="hint-text">Modelo: {prediccion.modelo} · {prediccion.version_modelo}. Validación guardada: {prediccion.resultado_validacion}.</p>
+        <p className={contextoVigente ? "informe-confirmado" : "card-help"}>{contextoVigente ? "✓ Contexto confirmado. Puede continuar a la plantilla." : "Confirmación pendiente para continuar."}</p>
         <fieldset disabled={bloqueada || ocupado} style={sinBorde}>
+          <div className="informe-form-grid">
           <div className="form-group"><label htmlFor="tipo-informe">Tipo de informe a confirmar *</label>
-            <select id="tipo-informe" value={form.tipoInformeId} onChange={e => cambiarContexto({ tipoInformeId: e.target.value })}>
+            <select id="tipo-informe" required value={form.tipoInformeId} onChange={e => cambiarContexto({ tipoInformeId: e.target.value })}>
               <option value="">Seleccione un tipo</option>
               {tipos.map(tipo => <option key={tipo.id} value={tipo.id}>{tipo.nombre}</option>)}
             </select>
           </div>
           <div className="form-group"><label htmlFor="area-destino">Área de destino a confirmar *</label>
-            <select id="area-destino" value={form.areaDestinoId} onChange={e => cambiarContexto({ areaDestinoId: e.target.value })}>
+            <select id="area-destino" required value={form.areaDestinoId} onChange={e => cambiarContexto({ areaDestinoId: e.target.value })}>
               <option value="">Seleccione un área</option>
               {areas.map(area => <option key={area.id} value={area.id}>{area.nombre}</option>)}
             </select>
           </div>
-          <fieldset><legend>Normas propuestas que confirma</legend>
-            {!prediccion.normativas?.length && <p>La API no propuso normas para este asunto.</p>}
-            {prediccion.normativas?.map(norma => <div key={norma.normativa_id}>
-              <label className="checkbox-field"><input type="checkbox" checked={form.normativaIds.includes(norma.normativa_id)}
-                onChange={e => cambiarContexto({ normativaIds: e.target.checked
-                  ? [...form.normativaIds, norma.normativa_id] : form.normativaIds.filter(id => id !== norma.normativa_id) })} />
-                {norma.codigo ? `${norma.codigo} — ` : ""}{norma.titulo} · {confianza(norma.confianza)}
-              </label>
-            </div>)}
-          </fieldset>
-          <p>Puede desmarcar normas propuestas. No se agregan normas externas a esta predicción.</p>
-          <div className="btn-row">
+          </div>
+          <div className="informe-normativas">
+          <NormativasSugeridas prediccion={prediccion} seleccionadas={form.normativaIds}
+            onChange={normativaIds => cambiarContexto({ normativaIds })} />
+          <p className="hint-text">Puede desmarcar normas propuestas. No se agregan normas externas a esta predicción.</p>
+          </div>
+          <div className="informe-acciones">
+            <button type="button" className="btn-danger" onClick={() => confirmar(true)}>Rechazar propuesta</button>
             <button type="button" className="btn-primary" disabled={contextoVigente || !form.tipoInformeId || !form.areaDestinoId} onClick={() => confirmar()}>
               {modoConfirmacion === "ACEPTADA" ? "Aceptar propuesta" : "Confirmar correcciones"}
             </button>
-            <button type="button" className="btn-danger" onClick={() => confirmar(true)}>Rechazar propuesta</button>
           </div>
         </fieldset>
       </>}
     </section>
 
-    <section className="card" aria-labelledby="etapa-datos">
-      <h2 id="etapa-datos">3. Plantilla y datos</h2>
+    <section id="panel-paso-3" className="informe-panel" hidden={pasoActual !== 3} aria-labelledby="titulo-paso">
       {!contextoVigente ? <p>Confirme el contexto para seleccionar la plantilla y completar sus datos.</p> : <>
+        <p className="card-help">La plantilla define la estructura del documento. Complete los datos que servirán para redactarlo.</p>
         {estadoPlantillas === "cargando" && <p role="status">Cargando plantillas compatibles y campos…</p>}
         {avisoPlantilla && <p className="warning-message" role="alert">{avisoPlantilla}</p>}
-        {estadoPlantillas === "error" && <button type="button" disabled={ocupado}
+        {estadoPlantillas === "error" && <button type="button" className="btn-secondary" disabled={ocupado}
           onClick={() => ejecutar("campos", vigente => cargarFormatos(solicitudActual.current, form, vigente))}>Reintentar plantillas</button>}
         {estadoPlantillas === "listo" && !plantillas.length && <p className="warning-message" role="status">No hay una plantilla activa compatible con el tipo y el área confirmados. No se puede generar todavía.</p>}
         <fieldset disabled={bloqueada || ocupado || estadoPlantillas !== "listo"} style={sinBorde}>
           <div className="form-group"><label htmlFor="plantilla">Plantilla *</label>
-            <select id="plantilla" value={form.plantillaId} onChange={e => cambiarPlantilla(e.target.value)}>
+            <select id="plantilla" required value={form.plantillaId} onChange={e => cambiarPlantilla(e.target.value)}>
               <option value="">Seleccione una plantilla</option>
               {plantillas.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
             </select>
             <p className="card-help">{plantillas.find(p => p.id === form.plantillaId)?.descripcion}</p>
-            {form.plantillaId && <div>
-              <p>Secciones del borrador resultante:</p>
+            {form.plantillaId && <div className="informe-estructura">
+              <h3>Así se organizará su borrador</h3>
               <ol>{seccionesDePlantilla(plantillas.find(p => p.id === form.plantillaId)).map(seccion =>
-                <li key={seccion.clave}>{seccion.titulo}{seccion.obligatoria ? " (obligatoria)" : " (opcional)"}</li>)}</ol>
+                <li key={seccion.clave}>{seccion.titulo}<small>{seccion.obligatoria ? "Obligatoria" : "Opcional"}</small></li>)}</ol>
               <p className="card-help">Los campos siguientes son los datos de entrada para elaborarlo.</p>
             </div>}
           </div>
           <div className="form-group"><label htmlFor="area-origen">Área de origen *</label>
-            <select id="area-origen" value={form.areaOrigenId} onChange={e => setForm(prev => ({ ...prev, areaOrigenId: e.target.value }))}>
+            <select id="area-origen" required value={form.areaOrigenId} onChange={e => setForm(prev => ({ ...prev, areaOrigenId: e.target.value }))}>
               <option value="">Seleccione un área</option>
               {areas.map(area => <option key={area.id} value={area.id}>{area.nombre}</option>)}
             </select>
           </div>
-          {form.plantillaId && idCampos !== form.plantillaId && !ocupado && <button type="button" onClick={() => cambiarPlantilla(form.plantillaId)}>Reintentar carga de campos</button>}
+          {form.plantillaId && idCampos !== form.plantillaId && !ocupado && <button type="button" className="btn-secondary" onClick={() => cambiarPlantilla(form.plantillaId)}>Reintentar carga de campos</button>}
           {campos.map(campo => <div className="form-group" key={campo.id}>
             <label htmlFor={`campo-${campo.id}`}>{campo.etiqueta}{campo.obligatorio ? " *" : ""}</label>{renderCampo(campo)}
           </div>)}
-          <button type="button" className="btn-primary" disabled={!form.plantillaId || idCampos !== form.plantillaId} onClick={guardarDatos}>Guardar datos</button>
+          {progreso.plantillaLista && !progreso.datosListos && <p className="informe-pendientes" id="datos-pendientes">
+            {!form.areaOrigenId && "Seleccione el área de origen. "}
+            {progreso.faltantes.length > 0 && `Faltan ${progreso.faltantes.length} campos obligatorios: ${progreso.faltantes.map(c => c.etiqueta).join(", ")}. `}
+            {!progreso.valoresValidos && "Revise los valores numéricos."}
+          </p>}
+          <div className="informe-acciones"><button type="button" className="btn-primary" disabled={!progreso.datosListos}
+            aria-describedby={progreso.plantillaLista && !progreso.datosListos ? "datos-pendientes" : undefined}
+            onClick={guardarDatos}>Guardar datos y continuar <span aria-hidden="true">→</span></button></div>
         </fieldset>
       </>}
     </section>
 
-    <section className="card" aria-labelledby="etapa-borrador">
-      <h2 id="etapa-borrador">4. Borrador</h2>
+    <section id="panel-paso-4" className="informe-panel" hidden={pasoActual !== 4} aria-labelledby="titulo-paso">
       {!informe && solicitud?.estado === "PROCESANDO" && <div>
         <p>Hay una generación en curso. Si se interrumpió, puede reintentar cuando venza su tiempo de espera. Se utilizarán los datos ya guardados.</p>
         <button type="button" className="btn-primary" disabled={ocupado || !elaboracionPermitida}
           onClick={reintentarGeneracion}>Reintentar generación</button>
       </div>}
-      {!informe && solicitud?.estado !== "GENERADA" && <fieldset disabled={bloqueada || ocupado || !contextoVigente || estadoPlantillas !== "listo" || !form.plantillaId || idCampos !== form.plantillaId} style={sinBorde}>
-        <p>Complete la plantilla y los datos requeridos para generar. Se guardarán antes de llamar al generador.</p>
+      {!informe && !["GENERADA", "PROCESANDO"].includes(solicitud?.estado) && <fieldset disabled={bloqueada || ocupado || !progreso.datosListos} style={sinBorde}>
+        <div className="informe-nota"><strong>Todo listo para elaborar el borrador.</strong><p>Los datos se guardarán antes de generar. Después podrá revisar cada sección y guardar sus cambios como una nueva versión.</p></div>
+        <div className="form-group">
         <label htmlFor="instrucciones">Instrucciones para el generador</label>
         <textarea id="instrucciones" rows="4" value={instrucciones} onChange={e => setInstrucciones(e.target.value)} />
-        <button type="button" className="btn-primary" onClick={generar}>Generar borrador estructurado</button>
+        </div>
+        <p className="hint-text">Revise el resultado antes de usarlo. Si falta información, manténgala pendiente de verificación.</p>
+        <div className="informe-acciones"><button type="button" className="btn-primary" onClick={generar}>Generar borrador estructurado</button></div>
       </fieldset>}
       {!informe && solicitud?.estado === "GENERADA" && <div>
         <p>Esta solicitud ya tiene un informe. Para recuperarlo, abra su enlace guardado o ingrese el ID del informe.</p>
-        <label htmlFor="informe-id">ID del informe</label>
+        <div className="form-group"><label htmlFor="informe-id">ID del informe</label>
         <input id="informe-id" value={informeId} onChange={e => setInformeId(e.target.value)} disabled={ocupado} />
-        <button type="button" onClick={abrirInforme} disabled={ocupado}>Abrir borrador</button>
+        </div><button type="button" className="btn-primary" onClick={abrirInforme} disabled={ocupado}>Abrir borrador</button>
       </div>}
       {informe && <fieldset disabled={ocupado || !elaboracionPermitida || informe.estado !== "BORRADOR"} style={sinBorde}>
-        <p>Informe: <code>{informe.informe_id}</code> · Estado: {informe.estado} · Versión: {informe.numero_version}</p>
+        <div className="informe-version"><strong>Versión {informe.numero_version}</strong><span>{informe.estado}</span></div>
+        <p className="hint-text">Informe: <code>{informe.informe_id}</code></p>
         <div className="form-group"><label htmlFor="titulo">Título</label>
           <input id="titulo" value={titulo} onChange={e => setTitulo(e.target.value)} />
         </div>
         <EditorBorrador informe={informe} contenido={contenido}
           onChange={(clave, valor) => setContenido(prev => ({ ...prev, [clave]: valor }))} />
-        <button type="button" className="btn-primary" onClick={guardarEdicion}>Guardar borrador</button>
+        <div className="informe-acciones"><button type="button" className="btn-primary" onClick={guardarEdicion}>Guardar borrador</button></div>
       </fieldset>}
     </section>
+    <div className="informe-navegacion">
+      <span>{pasoActual === 1 ? "Comience por el asunto" : `Paso ${pasoActual} de 4`}</span>
+      <div>{pasoActual > 1 && <button type="button" className="btn-secondary" disabled={ocupado || cargando}
+        onClick={() => setPasoElegido(pasoActual - 1)}><span aria-hidden="true">← </span>Volver</button>}
+      {pasoActual < pasoDisponible && pasoActual !== 3 && <button type="button" className="btn-secondary" disabled={ocupado || cargando}
+        onClick={() => setPasoElegido(pasoActual + 1)}>Continuar <span aria-hidden="true">→</span></button>}
+      {pasoActual === 3 && (informe || ["GENERADA", "PROCESANDO"].includes(solicitud?.estado)) &&
+        <button type="button" className="btn-secondary" disabled={ocupado} onClick={() => setPasoElegido(4)}>Volver al borrador →</button>}
+      </div>
+    </div>
+    </div>
+    <aside className="informe-resumen" aria-label="Resumen del informe">
+      <p className="informe-eyebrow">SU INFORME</p>
+      <h2>{informe ? "Borrador disponible" : "En preparación"}</h2>
+      <dl>
+        <div><dt>Asunto</dt><dd>{form.asunto.trim() || "Aún por definir"}</dd></div>
+        <div><dt>Tipo y destino</dt><dd>{contextoVigente ? <>{tipos.find(t => t.id === form.tipoInformeId)?.nombre || "Tipo confirmado"}<br />{areas.find(a => a.id === form.areaDestinoId)?.nombre || "Área confirmada"}</> : "Pendientes de confirmación"}</dd></div>
+        <div><dt>Normas confirmadas</dt><dd>{contextoVigente ? form.normativaIds.length ? `${form.normativaIds.length} seleccionadas` : "Ninguna seleccionada" : "Pendientes de revisión"}</dd></div>
+        <div><dt>Plantilla</dt><dd>{contextoVigente ? plantillas.find(p => p.id === form.plantillaId)?.nombre || "Pendiente de selección" : "Disponible tras confirmar"}</dd></div>
+      </dl>
+      {solicitud && <details className="informe-identificador"><summary>Datos de la solicitud</summary>
+        <p>Estado: {solicitud.estado}</p><code>{solicitud.id}</code>
+      </details>}
+      <p className="informe-resumen-ayuda">La IA asiste en la redacción. Usted revisa y confirma la información.</p>
+    </aside>
+    </div>
   </div>;
 }

@@ -6,6 +6,7 @@ import MainLayout from "./layouts/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./styles/app.css";
+import "./styles/nuevoInforme.css";
 
 function App() {
   return (

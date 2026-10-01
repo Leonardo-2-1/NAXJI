@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from pydantic import Field
@@ -16,13 +16,38 @@ class CategoriaPredicha(ResponseModel):
     confianza: float | None = Field(ge=0, le=1)
 
 
+class CorrespondenciaResponse(ResponseModel):
+    etiqueta: str
+    estado_verificacion: str
+    documento_codigo: str | None
+    documento_titulo: str
+    documento_numero: str
+    documento_url: str
+    documento_publicacion: date
+    fuente_url: str
+    fuente_vigencia_url: str
+    verificado_en: date
+    ambito: str
+    vigencia: str
+    justificacion: str
+    confianza_tema: float | None = Field(ge=0, le=1)
+
+
+class TemaNormativoResponse(ResponseModel):
+    codigo: str
+    etiqueta: str
+    confianza: float | None = Field(ge=0, le=1)
+    normativa_ids: list[UUID]
+
+
 class NormativaResponse(ResponseModel):
     normativa_id: UUID
     codigo: str | None
     titulo: str
-    confianza: float | None = Field(ge=0, le=1)
+    confianza: float | None = Field(ge=0, le=1, description="Máxima confianza de los temas asociados; no es probabilidad de vigencia ni aplicabilidad jurídica")
     orden: int | None
     aceptada: bool | None
+    correspondencias: list[CorrespondenciaResponse] = Field(default_factory=list)
 
 
 class PrediccionResponse(ResponseModel):
@@ -38,6 +63,7 @@ class PrediccionResponse(ResponseModel):
     area_destino: CategoriaPredicha | None
     normativas: list[NormativaResponse]
     advertencias: list[str] = Field(default_factory=list)
+    temas_normativos: list[TemaNormativoResponse] = Field(default_factory=list)
 
 
 def representar_prediccion(p: PrediccionContexto, catalogos: CatalogoRepository) -> PrediccionResponse:
@@ -50,6 +76,7 @@ def representar_prediccion(p: PrediccionContexto, catalogos: CatalogoRepository)
             normas.append(NormativaResponse(
                 normativa_id=normativa.id, codigo=normativa.codigo, titulo=normativa.titulo,
                 confianza=n.confianza, orden=n.orden, aceptada=n.aceptada,
+                correspondencias=p.parametros.get("correspondencias_normativas", {}).get(str(n.normativa_id), []),
             ))
     def categoria(item, confianza):
         return CategoriaPredicha(id=item.id, codigo=item.codigo, nombre=item.nombre,
@@ -61,4 +88,5 @@ def representar_prediccion(p: PrediccionContexto, catalogos: CatalogoRepository)
         tipo_informe=categoria(tipo, p.confianza_tipo),
         area_destino=categoria(area, p.confianza_area), normativas=normas,
         advertencias=p.parametros.get('advertencias_catalogo', []),
+        temas_normativos=p.parametros.get('temas_normativos', []),
     )

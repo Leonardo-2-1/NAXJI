@@ -15,6 +15,10 @@ class CatalogoRepositoryMemory(
     CatalogoRepository
 ):
 
+    def __init__(self, *, normativas=None, correspondencias=()):
+        self.normativas = deepcopy(NORMATIVAS if normativas is None else normativas)
+        self.correspondencias = deepcopy(list(correspondencias))
+
     def tipos_informe(self):
         return deepcopy(TIPOS)
 
@@ -28,10 +32,13 @@ class CatalogoRepositoryMemory(
         normativa = next(
             (
                 n
-                for n in NORMATIVAS
+                for n in self.normativas
                 if n.id == normativa_id
             ),
             None
         )
 
         return deepcopy(normativa)
+
+    def correspondencias_normativas(self, etiquetas):
+        return deepcopy([c for c in self.correspondencias if c.etiqueta in etiquetas])

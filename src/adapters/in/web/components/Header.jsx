@@ -19,9 +19,9 @@ function Header() {
 
   return (
     <header className="header">
-      <div>
-        <h2>🏛️ NAXJI</h2>
-        <span>Copilot Municipal</span>
+      <div className="header-brand">
+        <span className="brand-mark" aria-hidden="true">N</span>
+        <div><h2>NAXJI</h2><span>Copilot Municipal</span></div>
       </div>
 
       <div className="header-user">
