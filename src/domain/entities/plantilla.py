@@ -32,3 +32,5 @@ class Plantilla:
     descripcion: str | None = None
     # El orden de la lista es el orden del documento. None conserva el contrato anterior.
     secciones_salida: list[SeccionSalida] | None = None
+    # None conserva la exportación piloto anterior. Se copia al encabezado de cada versión.
+    formato_documento: str | None = None

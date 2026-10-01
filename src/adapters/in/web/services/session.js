@@ -12,6 +12,7 @@ let expiresAt = 0;
 let refreshing = null;
 let configPromise = null;
 let currentUser = null;
+let revision = 0;
 
 // Retira credenciales persistidas por la implementación demo anterior.
 localStorage.removeItem("token");
@@ -27,8 +28,10 @@ export const authConfig = () => {
 
 export const storedUser = () => currentUser;
 export const saveUser = (user) => { currentUser = user; };
+export const revisionSesion = () => revision;
 
 export const clearSession = () => {
+  revision += 1;
   accessToken = null;
   expiresAt = 0;
   currentUser = null;
@@ -49,13 +52,22 @@ export const getAccessToken = async (forceRefresh = false) => {
   }
   if (config.mode !== "supabase") return null;
   if (!forceRefresh && accessToken && expiresAt > Date.now() + 30000) return accessToken;
-  refreshing ??= authHttp.post("/auth/refresh").then(({ data }) => acceptSession(data))
-    .catch((error) => {
-      if ([401, 403].includes(error.response?.status)) clearSession();
+  if (!refreshing) {
+    const actual = revision;
+    refreshing = authHttp.post("/auth/refresh").then(({ data }) => {
+      if (actual !== revision) throw new axios.CanceledError("La sesión cambió.");
+      return acceptSession(data);
+    }).catch((error) => {
+      if (actual === revision && [401, 403].includes(error.response?.status)) clearSession();
       throw error;
     }).finally(() => { refreshing = null; });
+  }
   return refreshing;
 };
+
+// Solo comprueba si puede recuperarse un token. ProtectedRoute valida el perfil
+// contra /auth/me antes de mostrar contenido, tanto en demo como en Supabase.
+export const recuperarSesion = async () => Boolean(await getAccessToken());
 
 export const startSession = async ({ email, password, demoToken }) => {
   // Una renovación iniciada al cargar la página no debe borrar el login nuevo.
@@ -66,7 +78,9 @@ export const startSession = async ({ email, password, demoToken }) => {
     sessionStorage.setItem("naxji_demo_token", demoToken);
     return;
   }
+  const actual = revision;
   const { data } = await authHttp.post("/auth/login", { email, password });
+  if (actual !== revision) throw new axios.CanceledError("La sesión cambió.");
   acceptSession(data);
 };
 

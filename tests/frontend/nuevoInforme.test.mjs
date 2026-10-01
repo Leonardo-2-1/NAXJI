@@ -1,9 +1,12 @@
 // Recorrido del componente React con HTTP simulado: nunca escribe en Supabase.
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { JSDOM } from "jsdom";
 
-test("formulario guiado: navegación, invalidación, recuperación, reintento y versiones", async t => {
+const fixture = JSON.parse(await readFile(new URL("../fixtures/inspeccion_piloto.json", import.meta.url), "utf8"));
+
+for (const esMdt of [false, true]) test(`inspección ${esMdt ? "v2 Anexo 08" : "v1 piloto"}: formulario, invalidación, recuperación, reintento y versiones`, async t => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/nuevo-informe" });
   const anteriores = new Map();
   for (const key of ["window", "document", "navigator", "HTMLElement", "Event", "localStorage", "sessionStorage"]) {
@@ -19,14 +22,24 @@ test("formulario guiado: navegación, invalidación, recuperación, reintento y 
   const adapterAnterior = axios.defaults.adapter;
   const sid = "11111111-1111-4111-8111-111111111111";
   const iid = "33333333-3333-4333-8333-333333333333";
-  const tipos = [{ id: "t1", nombre: "Tipo ficticio 1" }, { id: "t2", nombre: "Tipo ficticio 2" }];
-  const areas = [{ id: "a1", nombre: "Área ficticia 1" }, { id: "a2", nombre: "Área ficticia 2" }];
-  const plantilla = { id: "p1", nombre: "Plantilla DEMO", tipo_informe_id: "t1", activa: true,
-    secciones_salida: [{ clave: "resumen", titulo: "Resumen de prueba", obligatoria: true },
-      { clave: "pendientes", titulo: "Pendientes de prueba", obligatoria: true }] };
-  const campos = [{ id: "c1", etiqueta: "Descripción", tipo_dato: "textarea", obligatorio: true, activo: true }];
+  const tipos = [{ id: "t1", nombre: "Informe de Inspección" }, { id: "t2", nombre: "Tipo sin plantilla" }];
+  const areas = [{ id: "a1", nombre: "Subgerencia de Gestión Ambiental" }, { id: "a2", nombre: "Área ficticia 2" }];
+  const { plantilla, campos } = structuredClone(fixture);
+  if (esMdt) {
+    plantilla.version = 2;
+    plantilla.formato_documento = "mdt_informe_anexo08_2019_revision1";
+    plantilla.secciones_salida = [{ clave: "cuerpo", titulo: "Cuerpo del informe interno", obligatoria: true }];
+  }
+  const campoEditado = esMdt ? "contenido-cuerpo" : "contenido-hallazgos";
   let solicitud, prediccion, informe, resolverPrediccion;
   let aplazar = false, fallarGeneracion = false, fallarCampos = false;
+  let fallarDescarga = false;
+  const versiones = new Map();
+  const descargas = [];
+  const originalCreate = URL.createObjectURL, originalRevoke = URL.revokeObjectURL;
+  URL.createObjectURL = blob => { descargas.push(blob); return "blob:prueba-docx"; };
+  URL.revokeObjectURL = () => {};
+  dom.window.HTMLAnchorElement.prototype.click = function () { descargas.push(this.download); };
   const requests = [];
   axios.defaults.adapter = async config => {
     const data = typeof config.data === "string" ? JSON.parse(config.data) : config.data;
@@ -66,9 +79,30 @@ test("formulario guiado: navegación, invalidación, recuperación, reintento y 
       solicitud.estado = "GENERADA";
       result = informe = { informe_id: iid, solicitud_id: sid, estado: "BORRADOR", numero_version: 1,
         titulo: "Borrador de prueba", secciones_salida: plantilla.secciones_salida,
-        contenido: { encabezado: { asunto: solicitud.asunto }, resumen: "Sin resultados de inspección.", pendientes: "Verificación pendiente." } };
+        plantilla_nombre: plantilla.nombre, plantilla_version: plantilla.version,
+        contenido: { encabezado: { asunto: solicitud.asunto, formato_documento: plantilla.formato_documento, autor_id: "99999999-9999-4999-8999-999999999999" }, ...Object.fromEntries(plantilla.secciones_salida.map(s =>
+          [s.clave, "Pendiente de verificación: no se aportaron resultados de inspección."])) } };
+      versiones.set(1, structuredClone(informe));
+    } else if (config.url === `/solicitudes/${sid}/informe`) {
+      result = informe;
+    } else if (config.url.endsWith("/docx")) {
+      if (fallarDescarga) {
+        const fallo = error("Error de descarga");
+        fallo.response.data = new Blob([JSON.stringify({ detail: "No tiene acceso a este recurso" })], { type: "application/json" });
+        fallo.response.status = 403;
+        throw fallo;
+      }
+      result = new Blob([JSON.stringify(versiones.get(Number(config.url.split("/").at(-2))).contenido)],
+        { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    } else if (config.url.startsWith(`/informes/${iid}/versiones/`)) {
+      result = versiones.get(Number(config.url.split("/").at(-1)));
     } else if (config.url === `/informes/${iid}`) {
-      if (config.method === "put") informe = { ...informe, ...data, numero_version: informe.numero_version + 1 };
+      if (config.method === "put") {
+        informe = { ...informe, ...data, numero_version: informe.numero_version + 1 };
+        if (data.encabezado_oficial) informe.contenido = { ...data.contenido,
+          encabezado: { ...data.contenido.encabezado, documento: data.encabezado_oficial } };
+        versiones.set(informe.numero_version, structuredClone(informe));
+      }
       result = informe;
     } else throw new Error(`HTTP no previsto: ${config.method} ${config.url}`);
     return { data: structuredClone(result), status: 200, statusText: "OK", headers: {}, config };
@@ -135,16 +169,21 @@ test("formulario guiado: navegación, invalidación, recuperación, reintento y 
       assert.equal(paso(4).disabled, true);
       fallarCampos = false;
       await pulsar(boton("Reintentar carga de campos"));
-      assert.equal(boton("Guardar datos y continuar").matches(":disabled"), true);
-      await escribir("campo-c1", "No hay resultados de inspección registrados.");
+      assert.equal(boton("Guardar datos fuente").matches(":disabled"), true);
+      assert.equal(boton("Generar propuesta con Ollama").matches(":disabled"), true);
+      assert.match(texto(), /No constituye un formato municipal oficial/);
+      assert.doesNotMatch(texto(), /seleccione la v2|Existe una versión de plantilla más reciente/);
+      for (const campo of campos) assert.ok(document.getElementById(`campo-${campo.id}`));
+      assert.equal(document.getElementById("contenido-hallazgos"), null, "Los datos fuente no exigen redactar secciones");
+      await escribir("campo-c1", "Sin resultados de inspección");
       actual(3); // Completar el último campo no cambia de pantalla mientras se escribe.
-      assert.equal(paso(4).disabled, false);
-      await pulsar(boton("Guardar datos y continuar")); actual(4);
+      assert.equal(paso(4).disabled, true, "Sin versión guardada no hay vista previa");
+      await pulsar(boton("Guardar datos fuente")); actual(3);
     });
     await t.test("UUID recupera selección y datos; modificar tipo exige reconfirmar", async () => {
-      await mount(`/nuevo-informe?solicitud=${sid}`); actual(4);
+      await mount(`/nuevo-informe?solicitud=${sid}`); actual(3);
       await pulsar(paso(3));
-      assert.equal(document.getElementById("campo-c1").value, "No hay resultados de inspección registrados.");
+      assert.equal(document.getElementById("campo-c1").value, "Sin resultados de inspección");
       await pulsar(paso(2));
       assert.equal(document.querySelectorAll('.informe-normativas input[type="checkbox"]')[1].checked, false);
       await escribir("tipo-informe", "t2"); actual(2);
@@ -167,40 +206,85 @@ test("formulario guiado: navegación, invalidación, recuperación, reintento y 
       aplazar = false;
       await pulsar(boton("Analizar asunto")); await pulsar(boton("Aceptar propuesta"));
       await escribir("plantilla", "p1");
-      await escribir("campo-c1", "No hay resultados de inspección registrados.");
-      await pulsar(boton("Guardar datos y continuar")); actual(4);
+      await escribir("campo-c1", "Sin resultados de inspección");
+      await pulsar(boton("Guardar datos fuente")); actual(3);
     });
     await t.test("fallo de generación controlado, reintento, edición y recuperación de versión 2", async () => {
       fallarGeneracion = true;
-      await pulsar(boton("Generar borrador estructurado"));
-      assert.match(texto(), /Generador no disponible/); actual(4);
+      await pulsar(boton("Generar propuesta con Ollama"));
+      assert.match(texto(), /Generador no disponible/); actual(3);
       fallarGeneracion = false;
-      await pulsar(boton("Generar borrador estructurado"));
+      await pulsar(boton("Generar propuesta con Ollama")); actual(3);
+      assert.equal(paso(4).disabled, false);
       assert.equal(document.getElementById("contenido-encabezado"), null);
-      await escribir("contenido-pendientes", "Edición ficticia conservada.");
+      assert.deepEqual([...document.querySelectorAll('textarea[id^="contenido-"]')].map(el => el.id),
+        plantilla.secciones_salida.map(s => `contenido-${s.clave}`));
+      await escribir(campoEditado, "Edición ficticia conservada.");
+      assert.doesNotMatch(texto(), /99999999-9999-4999-8999-999999999999/);
+      await escribir("oficial-numero", "PRUEBA-LOCAL");
+      await escribir("oficial-referencia", "Ficha ficticia E1");
+      if (esMdt) await escribir("oficial-cargo_destinatario", "Cargo ficticio de prueba");
       await pulsar(boton("Guardar borrador"));
       assert.match(texto(), /Versión 2/);
+      assert.ok(texto().includes(`Versión de plantilla ${plantilla.version}`));
+      assert.equal(requests.findLast(r => r.method === "put" && r.url === `/informes/${iid}`).data.encabezado_oficial.numero, "PRUEBA-LOCAL");
       await mount(`/nuevo-informe?solicitud=${sid}&informe=${iid}`); actual(4);
-      assert.equal(document.getElementById("contenido-pendientes").value, "Edición ficticia conservada.");
+      assert.equal(document.getElementById(campoEditado).value, "Edición ficticia conservada.");
+      assert.equal(document.getElementById("oficial-numero").value, "PRUEBA-LOCAL");
+      if (esMdt) assert.equal(document.getElementById("oficial-cargo_destinatario").value, "Cargo ficticio de prueba");
       await mount(`/nuevo-informe?solicitud=${sid}`); actual(4);
-      await escribir("informe-id", iid); await pulsar(boton("Abrir borrador"));
-      assert.equal(document.getElementById("contenido-pendientes").value, "Edición ficticia conservada.");
+      assert.ok(requests.some(r => r.url === `/solicitudes/${sid}/informe`), "Se recupera automáticamente por UUID");
+      assert.equal(document.getElementById(campoEditado).value, "Edición ficticia conservada.");
+    });
+    await t.test("vista previa y DOCX usan la versión guardada, excluyen cambios sin guardar y conservan anteriores", async () => {
+      const preview = () => document.querySelector(".informe-documento").textContent;
+      assert.match(preview(), /Edición ficticia conservada/);
+      assert.match(preview(), /PRUEBA-LOCAL/);
+      await pulsar(paso(3));
+      await escribir(campoEditado, "Texto sin guardar que no se debe descargar.");
+      await escribir("oficial-numero", "NUMERO-SIN-GUARDAR");
+      await pulsar(paso(4));
+      assert.match(texto(), /Hay cambios sin guardar/);
+      assert.doesNotMatch(preview(), /Texto sin guardar/);
+      assert.doesNotMatch(preview(), /NUMERO-SIN-GUARDAR/);
+      const inicio = requests.length;
+      await pulsar(boton("Descargar DOCX"));
+      assert.deepEqual(requests.slice(inicio).map(r => [r.method, r.url]), [["get", `/informes/${iid}/versiones/2/docx`]]);
+      assert.match(await descargas[0].text(), /Edición ficticia conservada/);
+      assert.doesNotMatch(await descargas[0].text(), /Texto sin guardar/);
+      assert.equal(descargas[1], `NAXJI-${iid}-v2.docx`);
+      await escribir("version-vista", "1");
+      assert.match(preview(), /Pendiente de verificación/);
+      assert.doesNotMatch(preview(), /Edición ficticia conservada/);
+      assert.doesNotMatch(preview(), /PRUEBA-LOCAL|99999999-9999-4999-8999-999999999999/);
+      await pulsar(boton("Descargar DOCX"));
+      assert.equal(requests.at(-1).url, `/informes/${iid}/versiones/1/docx`);
+      fallarDescarga = true;
+      await pulsar(boton("Descargar DOCX"));
+      assert.match(texto(), /No tiene acceso a este recurso/);
+      fallarDescarga = false;
+      await pulsar(boton("Descargar DOCX"));
+      assert.match(texto(), /Descarga preparada/);
     });
     await t.test("PROCESANDO mantiene su reintento; los roles de consulta no editan", async () => {
       solicitud.estado = "PROCESANDO";
-      await mount(`/nuevo-informe?solicitud=${sid}`); actual(4);
+      await mount(`/nuevo-informe?solicitud=${sid}`); actual(3);
       const inicio = requests.length;
       await pulsar(boton("Reintentar generación"));
       assert.equal(requests.slice(inicio).some(r => r.url.endsWith("/completa")), false);
       saveUser({ id: "r", roles: ["REVISOR"] });
       await mount(`/nuevo-informe?solicitud=${sid}&informe=${iid}`); actual(4);
-      assert.equal(document.getElementById("contenido-pendientes").matches(":disabled"), true);
+      assert.equal(boton("Descargar DOCX").matches(":disabled"), false, "Lectura no depende de permiso de edición");
+      await pulsar(paso(3));
+      assert.equal(document.getElementById(campoEditado).matches(":disabled"), true);
       assert.equal(boton("Guardar borrador").matches(":disabled"), true);
     });
   } finally {
     if (root) await act(async () => root.unmount());
     await vite.close();
     axios.defaults.adapter = adapterAnterior;
+    URL.createObjectURL = originalCreate;
+    URL.revokeObjectURL = originalRevoke;
     dom.window.close();
     delete globalThis.IS_REACT_ACT_ENVIRONMENT;
     for (const [key, descriptor] of anteriores) {

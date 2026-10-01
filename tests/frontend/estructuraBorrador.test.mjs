@@ -35,7 +35,7 @@ test("editor React presenta encabezado legible y solo edita secciones ordenadas 
         datos: { fecha: "2020-01-01" }, ...Object.fromEntries(fixture.secciones_salida.map(s => [s.clave, "Texto"])) };
       const html = renderToStaticMarkup(React.createElement(Editor, { informe: { ...fixture, estructura_legacy: false, contenido }, contenido, onChange: () => {} }));
       assert.match(html, /Asunto guardado/);
-      assert.match(html, /Área de origen/);
+      assert.match(html, /Emisor \/ unidad remitente/);
       assert.doesNotMatch(html, /textarea[^>]*id="contenido-(encabezado|datos)"/);
       const ids = [...html.matchAll(/<textarea[^>]*id="contenido-([^"]+)"/g)].map(m => m[1]);
       assert.deepEqual(ids, fixture.secciones_salida.map(s => s.clave));

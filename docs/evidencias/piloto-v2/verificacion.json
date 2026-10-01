@@ -1,0 +1,181 @@
+{
+  "fecha": "2026-10-01",
+  "alcance": "Datos fuente, piloto v2, edici?n y exportaci?n de versiones guardadas. Cambios locales; sin push.",
+  "preservado": [
+    "Cambios locales del login, autenticaci?n y carga diferida",
+    "Borrado previo de requirements.txt y carpetas Postman",
+    "Predictor sklearn y sus 200 casos",
+    "Migraciones y semillas anteriores; versi?n 1 del piloto",
+    "Datos y configuraci?n de Supabase; servicio Ollama habitual"
+  ],
+  "flujo": [
+    "Asunto y an?lisis",
+    "Confirmaci?n de tipo, ?rea y selecci?n normativa",
+    "Plantilla, datos fuente, generaci?n, revisi?n y edici?n humana",
+    "Vista previa y DOCX de una versi?n guardada"
+  ],
+  "contrato_plantilla": {
+    "version": 2,
+    "entradas_obligatorias": [
+      "estado_resultados"
+    ],
+    "entradas_opcionales": [
+      "lugar_referencia",
+      "fecha_referencia",
+      "hechos_conocidos",
+      "referencias_conocidas",
+      "informacion_pendiente"
+    ],
+    "secciones_salida": [
+      {
+        "clave": "antecedentes",
+        "titulo": "Antecedentes",
+        "obligatoria": true
+      },
+      {
+        "clave": "objetivo",
+        "titulo": "Objetivo del informe",
+        "obligatoria": true
+      },
+      {
+        "clave": "analisis_tecnico",
+        "titulo": "Análisis técnico",
+        "obligatoria": true
+      },
+      {
+        "clave": "conclusiones",
+        "titulo": "Conclusiones",
+        "obligatoria": true
+      },
+      {
+        "clave": "recomendaciones",
+        "titulo": "Recomendaciones",
+        "obligatoria": false
+      }
+    ]
+  },
+  "contrato_exportacion": {
+    "metodo": "GET",
+    "ruta": "/informes/{informe_id}/versiones/{numero_version}/docx",
+    "contenido": "Versi?n persistida; no admite contenido enviado por el cliente",
+    "formato": "Word piloto A4 no institucional aprobado",
+    "autorizacion": "Mismos permisos de lectura que el informe: propietario activo con rol o administrador",
+    "cache": "no-store",
+    "ollama": false,
+    "escrituras": false
+  },
+  "compatibilidad": {
+    "plantilla_v1": "No se modifica ni se retira; el selector muestra las versiones",
+    "secciones": "Usa snapshot de cada versi?n; las anteriores sin snapshot conservan contrato legacy y textos adicionales",
+    "titulo": "Las nuevas versiones guardan t?tulo propio. Las antiguas conservan NULL y muestran aviso al usar el t?tulo actual del informe",
+    "recuperacion": "GET /solicitudes/{id}/informe permite recuperar autom?ticamente por UUID",
+    "concurrencia": "Conserva n?mero de versi?n para edici?n, reserva de generaci?n, reintentos y descarte de respuestas tard?as"
+  },
+  "defectos_corregidos": [
+    "La plantilla v1 exig?a entradas que eran secciones de salida: v2 separa ambas definiciones sin modificar v1",
+    "InformeRepositoryPostgres devolv?a updated_at del objeto anterior al trigger: ahora devuelve el registro persistido",
+    "El t?tulo global pod?a cambiar la exportaci?n de una versi?n anterior: nuevo snapshot nullable por versi?n",
+    "El estilo Title de python-docx inclu?a un borde azul: retirado y verificado visualmente en Word"
+  ],
+  "sql_pendiente_en_orden": [
+    "database/migrations/20261001_02_titulo_version.sql",
+    "database/seeds/20261001_piloto_v2_datos_fuente.sql"
+  ],
+  "despliegue": "Instalar requirements-export.txt. Revisar y aplicar manualmente la migraci?n del t?tulo antes de generar o editar con este backend en PostgreSQL; aplicar la semilla para disponer de v2. Nada se aplic? a Supabase.",
+  "pruebas": {
+    "python": {
+      "aprobadas": 177,
+      "omitidas": 14,
+      "comando": "NAXJI_TEST_PG_PORT=55433 python -m pytest -q",
+      "nota": "Incluye PostgreSQL aislado; las pruebas externas de Supabase/Auth y Ollama quedan opt-in. Advertencia preexistente de Starlette/httpx."
+    },
+    "ollama_real": {
+      "aprobadas": 1,
+      "modelo": "qwen2.5:7b",
+      "segundos": 4.448,
+      "http": {
+        "generacion": 201,
+        "edicion": 200,
+        "recuperacion": 200,
+        "descarga": 200
+      },
+      "entorno": "PostgreSQL aislado en loopback; identidad de prueba inyectada; sklearn y Ollama reales; sin Supabase"
+    },
+    "frontend": {
+      "aprobadas": 41,
+      "fallidas": 0,
+      "comando": "npm run test:frontend",
+      "entorno": "React con DOM y HTTP simulado; incluye protecci?n de rutas, selecci?n normativa, respuestas tard?as, edici?n, recuperaci?n, vista guardada, descarga y errores Blob"
+    },
+    "lint": "correcto",
+    "build": "correcto",
+    "diff_check": "correcto"
+  },
+  "sql_aislado": {
+    "destino": "PostgreSQL loopback 127.0.0.1:55433; bases nuevas de nombre aleatorio",
+    "pruebas": [
+      "Idempotencia de migraci?n y semilla",
+      "Todos los registros previos conservados",
+      "Conflicto de definici?n v2 rechazado sin sobrescribir",
+      "Persistencia y recuperaci?n con otra instancia de repositorio",
+      "Exportaci?n no cambia filas"
+    ],
+    "limpieza": "Bases de prueba eliminadas por fixture; cl?ster iniciado para esta tarea detenido al terminar"
+  },
+  "docx": {
+    "archivo": "NAXJI-piloto-v2-corregido.docx",
+    "sha256": "1e221dae86604ab033ce75e9b1e794911b297b99b0ac2aac8a2e0a1d309b3e29",
+    "abierto_con": "Microsoft Word, instancia oculta y solo lectura, cerrada al terminar",
+    "revision_visual": "Conversi?n PDF por Word y PNG inspeccionado: 1 p?gina, sin cortes ni solapamientos, encabezado legible, cinco t?tulos en orden y edici?n humana conservada",
+    "renderizador_alternativo": "render_docx.py no pudo ejecutarse por ausencia de LibreOffice; se us? Word instalado para la revisi?n visual"
+  },
+  "limites": [
+    "La verificaci?n de ausencia de hechos inventados cubre el caso ficticio probado; no certifica cualquier salida del modelo",
+    "El backend comprueba estructura y marcado de pendientes cuando no hay hechos; no sustituye la revisi?n humana de veracidad",
+    "No se us? una sesi?n real de Supabase ni se prob? RLS en la nube en esta tarea",
+    "El frontend se verific? en DOM; no se hizo un recorrido visual en un navegador conectado",
+    "Las versiones antiguas no permiten reconstruir t?tulos hist?ricos que nunca se guardaron",
+    "Vista HTML de contenido; la paginaci?n se comprueba con Word, no mediante el navegador"
+  ],
+  "archivos_de_esta_tarea": [
+    "README.md",
+    "requirements-export.txt",
+    "database/migrations/20261001_02_titulo_version.sql",
+    "database/seeds/20261001_piloto_v2_datos_fuente.sql",
+    "src/domain/entities/informe.py",
+    "src/domain/value_objects/fuentes_piloto.py",
+    "src/application/ports/output/exportador_informe.py",
+    "src/application/use_cases/exportar_informe.py",
+    "src/application/use_cases/generar_borrador.py",
+    "src/application/use_cases/actualizar_borrador.py",
+    "src/application/use_cases/obtener_informe.py",
+    "src/adapters/out/documents/__init__.py",
+    "src/adapters/out/documents/exportador_docx.py",
+    "src/adapters/out/ai/generador_borrador_ollama.py",
+    "src/adapters/out/ai/generador_borrador_mock.py",
+    "src/adapters/out/persistence/datos_demo.py",
+    "src/adapters/out/persistence/postgres.py",
+    "src/infrastructure/configuration/container.py",
+    "src/adapters/in/controllers/informe_controller.py",
+    "src/adapters/in/controllers/solicitud_controller.py",
+    "src/adapters/in/schemas/informe_response.py",
+    "src/adapters/in/web/pages/NuevoInforme.jsx",
+    "src/adapters/in/web/components/EditorBorrador.jsx",
+    "src/adapters/in/web/components/PasosInforme.jsx",
+    "src/adapters/in/web/components/VistaPreviaInforme.jsx",
+    "src/adapters/in/web/services/informeService.js",
+    "src/adapters/in/web/services/progresoInforme.js",
+    "src/adapters/in/web/styles/nuevoInforme.css",
+    "tests/test_piloto_v2.py",
+    "tests/test_piloto_v2_postgres.py",
+    "tests/test_piloto_v2_ollama.py",
+    "tests/test_estructura_postgres.py",
+    "tests/frontend/nuevoInforme.test.mjs",
+    "tests/frontend/progresoInforme.test.mjs"
+  ],
+  "evidencias": [
+    "docs/evidencias/piloto-v2/piloto-v2-ollama.json",
+    "docs/evidencias/piloto-v2/NAXJI-piloto-v2-corregido.docx",
+    "docs/evidencias/piloto-v2/verificacion.json"
+  ]
+}

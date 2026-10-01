@@ -13,7 +13,7 @@ class GeneradorBorradorMock(GeneradorBorrador):
             valor = datos.get(seccion.clave)
             if seccion.clave in {"desarrollo", "analisis_tecnico"}:
                 valor = datos.get("detalle", valor)
-            texto = valor if isinstance(valor, str) and valor.strip() else "Pendiente de elaboración humana."
+            texto = valor if isinstance(valor, str) and valor.strip() else "Pendiente de verificación: no se aportaron hechos para esta sección."
             contenido[seccion.clave] = f"DEMOSTRACIÓN MOCK — {seccion.titulo}. {texto}"
         return ResultadoBorrador(contenido=contenido, modelo_ia="MOCK_GENERADOR_BORRADOR",
                                  prompt_version="secciones-v2")

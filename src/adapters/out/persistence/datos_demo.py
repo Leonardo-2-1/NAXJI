@@ -308,4 +308,12 @@ def plantillas_demo() -> list[Plantilla]:
             plantilla
         )
 
+    # Nueva identidad/version: no se modifican los campos ni IDs de los fixtures anteriores.
+    from src.domain.value_objects.fuentes_piloto import campos_fuente_piloto
+    piloto = Plantilla(demo_id("plantilla:INFORME_TECNICO:v2"),
+                       "Informe Técnico – Piloto NAXJI (DEMO)", TIPOS[0].id, version=2,
+                       descripcion="DEMOSTRACIÓN v2 con datos fuente. No constituye un formato oficial municipal. Revisión humana obligatoria.",
+                       secciones_salida=estructura_piloto())
+    piloto.campos = campos_fuente_piloto(piloto.id)
+    resultado.append(piloto)
     return resultado

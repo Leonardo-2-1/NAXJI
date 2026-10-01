@@ -20,6 +20,8 @@ class VersionInforme:
     prompt_version: str | None = None
     resumen_cambios: str | None = None
     created_at: datetime = field(default_factory=ahora)
+    # Las versiones antiguas no tenían título propio; no se reconstruye su historia.
+    titulo: str | None = None
     # Snapshot inmutable en cada versión. None identifica versiones anteriores al paso 3.
     secciones_salida: list[SeccionSalida] | None = None
 

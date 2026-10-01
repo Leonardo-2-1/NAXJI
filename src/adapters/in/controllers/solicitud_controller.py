@@ -9,6 +9,7 @@ from ..schemas.solicitud_request import (
     ActualizarSolicitudRequest, SolicitudRequest, ValoresSolicitudRequest, SolicitudCompletaRequest,
 )
 from ..schemas.solicitud_response import SolicitudResponse
+from ..schemas.informe_response import InformeResponse, representar_informe
 
 
 router = APIRouter(prefix="/solicitudes", tags=["Solicitudes"], responses=RESPUESTAS_ERROR)
@@ -40,6 +41,12 @@ def actualizar_completa(solicitud_id: UUID, request: SolicitudCompletaRequest,
 @router.get("/{solicitud_id}", response_model=SolicitudResponse)
 def obtener(solicitud_id: UUID, usuario: Usuario, deps: Dependencias):
     return deps.obtener_solicitud.ejecutar(solicitud_id, usuario)
+
+
+@router.get("/{solicitud_id}/informe", response_model=InformeResponse,
+            summary="Recuperar el último borrador guardado desde la solicitud")
+def obtener_informe(solicitud_id: UUID, usuario: Usuario, deps: Dependencias):
+    return representar_informe(deps.obtener_informe.por_solicitud(solicitud_id, usuario))
 
 
 @router.put("/{solicitud_id}", response_model=SolicitudResponse,

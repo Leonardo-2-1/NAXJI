@@ -1,0 +1,410 @@
+{
+  "fecha_utc": "2026-10-01T17:25:08.474635+00:00",
+  "lectura": "GET de catálogos por backend local con Supabase Auth; sin SQL enviado a Supabase",
+  "tipos": [
+    {
+      "id": "668a217a-8f4f-47d6-99d8-0a7ab8661ea6",
+      "codigo": "INFORME_INSPECCION",
+      "nombre": "Informe de Inspección",
+      "activo": true
+    },
+    {
+      "id": "486d52de-f24b-4ae3-b327-3772a09f9b39",
+      "codigo": "INFORME_LEGAL",
+      "nombre": "Informe Legal",
+      "activo": true
+    },
+    {
+      "id": "008ee128-c99a-4474-af83-116225954818",
+      "codigo": "INFORME_TECNICO",
+      "nombre": "Informe Técnico",
+      "activo": true
+    },
+    {
+      "id": "ed87fb6e-dbfa-4f3f-9720-1232858a4aea",
+      "codigo": "MEMORANDO",
+      "nombre": "Memorando",
+      "activo": true
+    }
+  ],
+  "areas": [
+    {
+      "id": "997431f1-6ef5-4b58-be20-53a8c31cb797",
+      "codigo": "MDT_ALCALDIA",
+      "nombre": "Alcaldía",
+      "activo": true,
+      "area_padre_id": "54a74b1a-3feb-4a9c-9578-c57a2aef09e5",
+      "descripcion": "ROF 2020, pp. 7 y 67; fuente y fecha de consulta en database/seeds/pmv1_catalogos.sql."
+    },
+    {
+      "id": "54a74b1a-3feb-4a9c-9578-c57a2aef09e5",
+      "codigo": "MDT_CONCEJO",
+      "nombre": "Concejo Municipal",
+      "activo": true,
+      "area_padre_id": null,
+      "descripcion": "ROF 2020, art. 6 y p. 67. Fuente oficial: https://cdn.www.gob.pe/uploads/document/file/4258543/MDT_ROF_2020.pdf.pdf ; consulta 2026-09-29. Catálogo parcial."
+    },
+    {
+      "id": "3bae5df8-71a6-44e1-ace9-3bf7a28e446a",
+      "codigo": "MDT_GAJ",
+      "nombre": "Gerencia de Asesoría Jurídica",
+      "activo": true,
+      "area_padre_id": "a108bfad-d832-42ee-8b8a-a4e00b815eee",
+      "descripcion": "ROF 2020, pp. 7-8 y 67; fuente y fecha de consulta en database/seeds/pmv1_catalogos.sql."
+    },
+    {
+      "id": "33e8d2fe-948d-427f-846b-9e74543dca75",
+      "codigo": "MDT_GDE",
+      "nombre": "Gerencia de Desarrollo Económico",
+      "activo": true,
+      "area_padre_id": "a108bfad-d832-42ee-8b8a-a4e00b815eee",
+      "descripcion": "ROF 2020, pp. 7-8 y 67; fuente y fecha de consulta en database/seeds/pmv1_catalogos.sql."
+    },
+    {
+      "id": "94f85e15-3b43-45f2-9114-6ef7eb76725e",
+      "codigo": "MDT_GDT",
+      "nombre": "Gerencia de Desarrollo Territorial",
+      "activo": true,
+      "area_padre_id": "a108bfad-d832-42ee-8b8a-a4e00b815eee",
+      "descripcion": "ROF 2020, pp. 7-8 y 67; fuente y fecha de consulta en database/seeds/pmv1_catalogos.sql."
+    },
+    {
+      "id": "a108bfad-d832-42ee-8b8a-a4e00b815eee",
+      "codigo": "MDT_GM",
+      "nombre": "Gerencia Municipal",
+      "activo": true,
+      "area_padre_id": "997431f1-6ef5-4b58-be20-53a8c31cb797",
+      "descripcion": "ROF 2020, pp. 7 y 67; fuente y fecha de consulta en database/seeds/pmv1_catalogos.sql."
+    },
+    {
+      "id": "05858024-aaf0-40b5-839a-cbcf98202510",
+      "codigo": "MDT_GSP",
+      "nombre": "Gerencia de Servicios Públicos",
+      "activo": true,
+      "area_padre_id": "a108bfad-d832-42ee-8b8a-a4e00b815eee",
+      "descripcion": "ROF 2020, pp. 7-8 y 67; fuente y fecha de consulta en database/seeds/pmv1_catalogos.sql."
+    },
+    {
+      "id": "aa0bfe82-4841-4cc1-813e-7da5a6d3cf6f",
+      "codigo": "MDT_SGDUR",
+      "nombre": "Subgerencia de Desarrollo Urbano y Rural",
+      "activo": true,
+      "area_padre_id": "94f85e15-3b43-45f2-9114-6ef7eb76725e",
+      "descripcion": "ROF 2020, pp. 8 y 67; fuente y fecha de consulta en database/seeds/pmv1_catalogos.sql."
+    },
+    {
+      "id": "1973fec4-ba92-42e5-9de5-994dcd0c674b",
+      "codigo": "MDT_SGGA",
+      "nombre": "Subgerencia de Gestión Ambiental",
+      "activo": true,
+      "area_padre_id": "05858024-aaf0-40b5-839a-cbcf98202510",
+      "descripcion": "ROF 2020, pp. 8 y 67; fuente y fecha de consulta en database/seeds/pmv1_catalogos.sql."
+    }
+  ],
+  "plantillas": [
+    {
+      "id": "8ab3ad7e-97b0-43cd-89ef-4ac318a69978",
+      "nombre": "Informe Técnico – Piloto NAXJI",
+      "tipo_informe_id": "008ee128-c99a-4474-af83-116225954818",
+      "area_id": null,
+      "version": 1,
+      "activa": true,
+      "descripcion": "DEMOSTRACIÓN PMV1. No constituye formato oficial aprobado por MDT. Asunto y áreas se obtienen de la solicitud; autor del perfil autenticado. Revisión humana obligatoria.",
+      "secciones_salida": [
+        {
+          "clave": "antecedentes",
+          "titulo": "Antecedentes",
+          "obligatoria": true
+        },
+        {
+          "clave": "objetivo",
+          "titulo": "Objetivo del informe",
+          "obligatoria": true
+        },
+        {
+          "clave": "analisis_tecnico",
+          "titulo": "Análisis técnico",
+          "obligatoria": true
+        },
+        {
+          "clave": "conclusiones",
+          "titulo": "Conclusiones",
+          "obligatoria": true
+        },
+        {
+          "clave": "recomendaciones",
+          "titulo": "Recomendaciones",
+          "obligatoria": false
+        }
+      ],
+      "estructura_legacy": false,
+      "campos": [
+        {
+          "id": "705b6295-da50-4d3d-a6c9-c104703c8a83",
+          "plantilla_id": "8ab3ad7e-97b0-43cd-89ef-4ac318a69978",
+          "clave": "referencia_documento",
+          "etiqueta": "Número o referencia del documento",
+          "tipo_dato": "text",
+          "obligatorio": false,
+          "orden": 1,
+          "configuracion": {},
+          "activo": true
+        },
+        {
+          "id": "58143fd7-de16-4d4a-be36-a3d42105d2c3",
+          "plantilla_id": "8ab3ad7e-97b0-43cd-89ef-4ac318a69978",
+          "clave": "fecha",
+          "etiqueta": "Fecha",
+          "tipo_dato": "date",
+          "obligatorio": true,
+          "orden": 2,
+          "configuracion": {},
+          "activo": true
+        },
+        {
+          "id": "6d76a756-0d8f-4847-8636-7bd869fc2fbc",
+          "plantilla_id": "8ab3ad7e-97b0-43cd-89ef-4ac318a69978",
+          "clave": "antecedentes",
+          "etiqueta": "Antecedentes",
+          "tipo_dato": "textarea",
+          "obligatorio": true,
+          "orden": 3,
+          "configuracion": {},
+          "activo": true
+        },
+        {
+          "id": "e7ec9dba-b145-4a77-a324-8f7a6ade47e9",
+          "plantilla_id": "8ab3ad7e-97b0-43cd-89ef-4ac318a69978",
+          "clave": "objetivo",
+          "etiqueta": "Objetivo del informe",
+          "tipo_dato": "textarea",
+          "obligatorio": true,
+          "orden": 4,
+          "configuracion": {},
+          "activo": true
+        },
+        {
+          "id": "361ae67a-487c-44c0-92b6-6cb3829b66f3",
+          "plantilla_id": "8ab3ad7e-97b0-43cd-89ef-4ac318a69978",
+          "clave": "detalle",
+          "etiqueta": "Análisis técnico",
+          "tipo_dato": "textarea",
+          "obligatorio": true,
+          "orden": 5,
+          "configuracion": {},
+          "activo": true
+        },
+        {
+          "id": "593967b4-204f-4cfd-9e31-0c364cfa4254",
+          "plantilla_id": "8ab3ad7e-97b0-43cd-89ef-4ac318a69978",
+          "clave": "conclusiones",
+          "etiqueta": "Conclusiones",
+          "tipo_dato": "textarea",
+          "obligatorio": true,
+          "orden": 6,
+          "configuracion": {},
+          "activo": true
+        },
+        {
+          "id": "b6a02169-ebfd-4725-842c-8b21c9248ae2",
+          "plantilla_id": "8ab3ad7e-97b0-43cd-89ef-4ac318a69978",
+          "clave": "recomendaciones",
+          "etiqueta": "Recomendaciones",
+          "tipo_dato": "textarea",
+          "obligatorio": true,
+          "orden": 7,
+          "configuracion": {},
+          "activo": true
+        }
+      ]
+    },
+    {
+      "id": "6fb54016-59a9-4631-9254-d434a5c5f088",
+      "nombre": "Informe Técnico – Piloto NAXJI",
+      "tipo_informe_id": "008ee128-c99a-4474-af83-116225954818",
+      "area_id": null,
+      "version": 2,
+      "activa": true,
+      "descripcion": "DEMOSTRACIÓN v2 con datos fuente. No constituye un formato oficial municipal. No requiere redactar las secciones de salida. Los hechos faltantes quedan pendientes de verificación. Revisión humana obligatoria.",
+      "secciones_salida": [
+        {
+          "clave": "antecedentes",
+          "titulo": "Antecedentes",
+          "obligatoria": true
+        },
+        {
+          "clave": "objetivo",
+          "titulo": "Objetivo del informe",
+          "obligatoria": true
+        },
+        {
+          "clave": "analisis_tecnico",
+          "titulo": "Análisis técnico",
+          "obligatoria": true
+        },
+        {
+          "clave": "conclusiones",
+          "titulo": "Conclusiones",
+          "obligatoria": true
+        },
+        {
+          "clave": "recomendaciones",
+          "titulo": "Recomendaciones",
+          "obligatoria": false
+        }
+      ],
+      "estructura_legacy": false,
+      "campos": [
+        {
+          "id": "a5e314de-32d7-469d-877a-943e04fe9cbf",
+          "plantilla_id": "6fb54016-59a9-4631-9254-d434a5c5f088",
+          "clave": "estado_resultados",
+          "etiqueta": "Información disponible",
+          "tipo_dato": "select",
+          "obligatorio": true,
+          "orden": 1,
+          "configuracion": {
+            "ayuda": "Indique si existen resultados. Elegir una opción no acredita hechos ni sustituye sus fuentes.",
+            "opciones": [
+              "Sin resultados de inspección",
+              "Información parcial por verificar",
+              "Resultados documentados disponibles"
+            ]
+          },
+          "activo": true
+        },
+        {
+          "id": "28fbae27-a15a-4867-a60f-1114be7cbada",
+          "plantilla_id": "6fb54016-59a9-4631-9254-d434a5c5f088",
+          "clave": "lugar_referencia",
+          "etiqueta": "Lugar de referencia conocido",
+          "tipo_dato": "text",
+          "obligatorio": false,
+          "orden": 2,
+          "configuracion": {
+            "ayuda": "Opcional. Identifique el lugar solo si lo conoce; no implica que haya sido inspeccionado."
+          },
+          "activo": true
+        },
+        {
+          "id": "00218afa-570b-44c9-87d7-de03b2339217",
+          "plantilla_id": "6fb54016-59a9-4631-9254-d434a5c5f088",
+          "clave": "fecha_referencia",
+          "etiqueta": "Fecha de referencia conocida",
+          "tipo_dato": "date",
+          "obligatorio": false,
+          "orden": 3,
+          "configuracion": {
+            "ayuda": "Opcional. Fecha del hecho o documento aportado; no supone una inspección realizada."
+          },
+          "activo": true
+        },
+        {
+          "id": "9221c5f4-a13c-4f0f-94f0-b530f8cce0e5",
+          "plantilla_id": "6fb54016-59a9-4631-9254-d434a5c5f088",
+          "clave": "hechos_conocidos",
+          "etiqueta": "Hechos y resultados conocidos",
+          "tipo_dato": "textarea",
+          "obligatorio": false,
+          "orden": 4,
+          "configuracion": {
+            "ayuda": "Opcional. Describa solo hechos aportados, su origen y qué falta comprobar. Si no hay resultados, déjelo vacío o indíquelo expresamente.",
+            "rol_fuente": "hechos"
+          },
+          "activo": true
+        },
+        {
+          "id": "e33d0413-08a3-47d9-87f6-20d61741aa9a",
+          "plantilla_id": "6fb54016-59a9-4631-9254-d434a5c5f088",
+          "clave": "referencias_conocidas",
+          "etiqueta": "Documentos y referencias conocidos",
+          "tipo_dato": "textarea",
+          "obligatorio": false,
+          "orden": 5,
+          "configuracion": {
+            "ayuda": "Opcional. Identifique documentos, enlaces o extractos disponibles. Un número o enlace no acredita su contenido, vigencia ni aplicabilidad.",
+            "rol_fuente": "referencias"
+          },
+          "activo": true
+        },
+        {
+          "id": "731e97d5-4294-4e39-854a-1f6e10cf606a",
+          "plantilla_id": "6fb54016-59a9-4631-9254-d434a5c5f088",
+          "clave": "informacion_pendiente",
+          "etiqueta": "Información pendiente de obtener o verificar",
+          "tipo_dato": "textarea",
+          "obligatorio": false,
+          "orden": 6,
+          "configuracion": {
+            "ayuda": "Opcional. Señale datos faltantes. No necesita redactar antecedentes, análisis ni conclusiones."
+          },
+          "activo": true
+        }
+      ]
+    }
+  ],
+  "cobertura_tipos_predichos": [
+    {
+      "tipo_codigo": "INFORME_LEGAL",
+      "tipo_id": "486d52de-f24b-4ae3-b327-3772a09f9b39",
+      "plantillas_activas_cualquier_area": [],
+      "compatibles_MDT_SGGA": []
+    },
+    {
+      "tipo_codigo": "INFORME_TECNICO",
+      "tipo_id": "008ee128-c99a-4474-af83-116225954818",
+      "plantillas_activas_cualquier_area": [
+        "8ab3ad7e-97b0-43cd-89ef-4ac318a69978",
+        "6fb54016-59a9-4631-9254-d434a5c5f088"
+      ],
+      "compatibles_MDT_SGGA": [
+        "8ab3ad7e-97b0-43cd-89ef-4ac318a69978",
+        "6fb54016-59a9-4631-9254-d434a5c5f088"
+      ]
+    },
+    {
+      "tipo_codigo": "INFORME_INSPECCION",
+      "tipo_id": "668a217a-8f4f-47d6-99d8-0a7ab8661ea6",
+      "plantillas_activas_cualquier_area": [],
+      "compatibles_MDT_SGGA": []
+    }
+  ],
+  "areas_modelo_sin_catalogo": [
+    {
+      "etiqueta_modelo": "Subgerencia de Gestión del Riesgo de Desastres",
+      "codigo": "AREA_RIESGO_DESASTRES"
+    }
+  ],
+  "http": [
+    {
+      "metodo": "GET",
+      "ruta": "/auth/config",
+      "status": 200
+    },
+    {
+      "metodo": "GET",
+      "ruta": "/tipos-informe",
+      "status": 200
+    },
+    {
+      "metodo": "GET",
+      "ruta": "/areas",
+      "status": 200
+    },
+    {
+      "metodo": "GET",
+      "ruta": "/plantillas",
+      "status": 200
+    },
+    {
+      "metodo": "GET",
+      "ruta": "/plantillas/8ab3ad7e-97b0-43cd-89ef-4ac318a69978/campos",
+      "status": 200
+    },
+    {
+      "metodo": "GET",
+      "ruta": "/plantillas/6fb54016-59a9-4631-9254-d434a5c5f088/campos",
+      "status": 200
+    }
+  ]
+}

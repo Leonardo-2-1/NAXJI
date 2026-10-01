@@ -1,0 +1,66 @@
+{
+  "fecha_revision": "2026-10-01",
+  "alcance": "Informe interno de inspeccion PILOTO; no formato municipal aprobado",
+  "pruebas": {
+    "python_pass": 228,
+    "python_skip": 17,
+    "ollama_real_pass": 2,
+    "frontend_pass": 43,
+    "lint": "OK",
+    "build": "OK",
+    "git_diff_check": "OK"
+  },
+  "sql_nuevo": false,
+  "escrituras_supabase": false,
+  "push": false,
+  "fuentes_descargadas": [
+    {
+      "url": "https://cdn.www.gob.pe/uploads/document/file/10401081/8442725-formato-de-informe-de-supervision.docx?v=1785878687",
+      "archivo": "oefa-informe.docx",
+      "sha256": "a31c534630826cbff80bad2ed629f771cc696d100d174b30a233c7431e0daf20"
+    },
+    {
+      "url": "https://cdn.www.gob.pe/uploads/document/file/10401083/8442725-guia-de-supervisores-ambientales.pdf?v=1785878753",
+      "archivo": "oefa-guia.pdf",
+      "sha256": "3ce2181ed42744918fb10cf3fbf15d067daa08b297b1c4a4f27b89e70dce65cc"
+    },
+    {
+      "url": "https://cdn.www.gob.pe/uploads/document/file/4258543/MDT_ROF_2020.pdf.pdf?v=1678902895",
+      "archivo": "tambo-rof.pdf",
+      "sha256": "84e8b830d4579bc4eec36d16debe826918a203646c72208eeecbfef0037e3738"
+    }
+  ],
+  "renderizado": "Microsoft Word, solo lectura, macros deshabilitadas, enlaces sin actualizar; PDF/PNG revisados en todas sus paginas",
+  "limites": [
+    "Identidad ficticia inyectada en PostgreSQL aislado; no recorrido autenticado en Supabase.",
+    "Validacion de fidelidad conservadora por patrones e instrucciones, no prueba semantica universal.",
+    "Datos y evidencias del caso con resultados son ficticios, sin imagen real adjunta; requieren revision humana.",
+    "El formato institucional vigente de El Tambo no se pudo verificar desde los enlaces proporcionados."
+  ],
+  "artefactos": [
+    {
+      "archivo": "inspeccion-con-resultados-pagina-1.png",
+      "sha256": "19af7d81ae6ca6292d2f5862a3030e3d70e176d85f288428c811031c632fe1c0"
+    },
+    {
+      "archivo": "inspeccion-con-resultados.docx",
+      "sha256": "e97a1ebea6c38389bcfdda058ca7e5fec9513014f817cabf841e1d7bbacd8060"
+    },
+    {
+      "archivo": "inspeccion-con-resultados.pdf",
+      "sha256": "bc3e1f81c61c2084a4097e42979eab53f0d2b0032d10d8741db277ad53abe467"
+    },
+    {
+      "archivo": "inspeccion-sin-resultados-pagina-1.png",
+      "sha256": "f905f508fe4a5110678b186cb237333c97320245204bc59436ca8c98f982faaa"
+    },
+    {
+      "archivo": "inspeccion-sin-resultados.docx",
+      "sha256": "bf0c186e68a8754833a9bd1f25640aeb41256dbda433567344e700c2700868c8"
+    },
+    {
+      "archivo": "inspeccion-sin-resultados.pdf",
+      "sha256": "feb2fdeea5322b398a1440045f02af242487187f15642f8fda71ee98c3f52e96"
+    }
+  ]
+}

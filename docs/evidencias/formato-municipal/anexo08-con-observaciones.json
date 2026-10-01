@@ -1,0 +1,127 @@
+{
+  "entorno": "PostgreSQL aislado; identidad ficticia inyectada; no Supabase",
+  "ollama_real": true,
+  "modelo": "qwen2.5:7b",
+  "segundos": 3.951,
+  "datos_fuente": {
+    "estado_resultados": "Información parcial por verificar",
+    "lugar_inspeccion": "Parque ficticio de prueba NAXJI, acceso norte",
+    "fecha_inspeccion": "2026-09-30",
+    "alcance_solicitado": "Solo el entorno inmediato del acceso norte. No se inspeccionó el resto del parque.",
+    "resultados_observados": "Durante la visita de 10:20 a 10:40 se observaron dos bolsas cerradas junto al acceso norte. Ambas permanecían allí al terminar la observación. No se abrieron, pesaron ni identificó su contenido, origen o tiempo de permanencia. No se entrevistó a personas.",
+    "referencias_conocidas": "El solicitante describe la ficha ficticia F-01 y dos fotografías E-01 y E-02 del 2026-09-30. No están adjuntas; debe cotejarse su contenido antes de citarlas como evidencia verificada.",
+    "informacion_pendiente": "Confirmar ubicación y competencia territorial; obtener ficha y fotografías; verificar contenido, origen y permanencia de las bolsas."
+  },
+  "asunto": "PRUEBA NAXJI: inspección de bolsas con residuos en parque",
+  "propuesta": {
+    "informe_id": "74ec015a-be64-44cd-8472-1b9f5f20e44e",
+    "solicitud_id": "af1d560b-a8cb-44a1-801b-78cb8f1b5026",
+    "plantilla_id": "ad65fbd2-bdd4-4c2a-a863-887cfaf9c037",
+    "titulo": "Informe de Inspección",
+    "titulo_versionado": true,
+    "plantilla_nombre": "Informe de Inspección – Piloto NAXJI",
+    "plantilla_version": 2,
+    "estado": "BORRADOR",
+    "version_id": "22fa43e1-423a-466f-bfaa-7c602d6c5d7f",
+    "numero_version": 1,
+    "contenido": {
+      "cuerpo": "Durante la visita de 10:20 a 10:40 a la entrada norte del Parque ficticio de prueba NAXJI, se observaron dos bolsas cerradas. Ambas permanecían en el mismo lugar al final de la observación. No se abrieron, pesaron ni se identificó su contenido, origen o tiempo de permanencia. El solicitante describe la ficha ficticia F-01 y dos fotografías E-01 y E-02 del 2026-09-30, aunque no están adjuntas. Se recomienda confirmar la ubicación y competencia territorial, obtener la ficha y las fotografías, y verificar el contenido, origen y permanencia de las bolsas. Pendiente de verificación: la ubicación precisa y la competencia territorial.",
+      "encabezado": {
+        "asunto": "PRUEBA NAXJI: inspección de bolsas con residuos en parque",
+        "documento": {
+          "fecha": "",
+          "anexos": "",
+          "copias": "",
+          "emisor": "",
+          "numero": "",
+          "firmante": "",
+          "iniciales": "",
+          "referencia": "",
+          "destinatario": "",
+          "lugar_emision": "",
+          "cargo_firmante": "",
+          "cargo_destinatario": "",
+          "registro_documento": "",
+          "registro_expediente": ""
+        },
+        "area_origen": "Subgerencia de Gestión Ambiental",
+        "area_destino": "Subgerencia de Gestión Ambiental",
+        "tipo_documento": "Informe de Inspección",
+        "plantilla_nombre": "Informe de Inspección – Piloto NAXJI",
+        "formato_documento": "mdt_informe_anexo08_2019_revision1",
+        "plantilla_version": 2
+      }
+    },
+    "secciones_salida": [
+      {
+        "clave": "cuerpo",
+        "titulo": "Cuerpo del informe interno",
+        "obligatoria": true
+      }
+    ],
+    "estructura_legacy": false,
+    "origen": "IA",
+    "modelo_ia": "qwen2.5:7b",
+    "created_at": "2026-10-01T15:41:11.040870-05:00",
+    "updated_at": "2026-10-01T15:41:11.040870-05:00"
+  },
+  "edicion": {
+    "informe_id": "74ec015a-be64-44cd-8472-1b9f5f20e44e",
+    "solicitud_id": "af1d560b-a8cb-44a1-801b-78cb8f1b5026",
+    "plantilla_id": "ad65fbd2-bdd4-4c2a-a863-887cfaf9c037",
+    "titulo": "Informe de Inspección",
+    "titulo_versionado": true,
+    "plantilla_nombre": "Informe de Inspección – Piloto NAXJI",
+    "plantilla_version": 2,
+    "estado": "BORRADOR",
+    "version_id": "11ff7815-1d01-4a60-a854-6d2d39bfb17b",
+    "numero_version": 2,
+    "contenido": {
+      "cuerpo": "Durante la visita de 10:20 a 10:40 a la entrada norte del Parque ficticio de prueba NAXJI, se observaron dos bolsas cerradas. Ambas permanecían en el mismo lugar al final de la observación. No se abrieron, pesaron ni se identificó su contenido, origen o tiempo de permanencia. El solicitante describe la ficha ficticia F-01 y dos fotografías E-01 y E-02 del 2026-09-30, aunque no están adjuntas. Se recomienda confirmar la ubicación y competencia territorial, obtener la ficha y las fotografías, y verificar el contenido, origen y permanencia de las bolsas. Pendiente de verificación: la ubicación precisa y la competencia territorial.\nRevisión humana de prueba: obtener y cotejar las fuentes documentales antes de incorporarlas como anexos.",
+      "encabezado": {
+        "asunto": "PRUEBA NAXJI: inspección de bolsas con residuos en parque",
+        "documento": {
+          "fecha": "2026-10-01",
+          "anexos": "",
+          "copias": "",
+          "emisor": "",
+          "numero": "",
+          "firmante": "",
+          "iniciales": "",
+          "referencia": "",
+          "destinatario": "",
+          "lugar_emision": "Lugar de prueba NAXJI",
+          "cargo_firmante": "",
+          "cargo_destinatario": "",
+          "registro_documento": "",
+          "registro_expediente": ""
+        },
+        "area_origen": "Subgerencia de Gestión Ambiental",
+        "area_destino": "Subgerencia de Gestión Ambiental",
+        "tipo_documento": "Informe de Inspección",
+        "plantilla_nombre": "Informe de Inspección – Piloto NAXJI",
+        "formato_documento": "mdt_informe_anexo08_2019_revision1",
+        "plantilla_version": 2
+      }
+    },
+    "secciones_salida": [
+      {
+        "clave": "cuerpo",
+        "titulo": "Cuerpo del informe interno",
+        "obligatoria": true
+      }
+    ],
+    "estructura_legacy": false,
+    "origen": "USUARIO",
+    "modelo_ia": null,
+    "created_at": "2026-10-01T15:41:11.040870-05:00",
+    "updated_at": "2026-10-01T15:41:11.083185-05:00"
+  },
+  "http": {
+    "generacion": 201,
+    "edicion": 200,
+    "recuperacion": 200,
+    "descarga": 200,
+    "descarga_ajena": 403
+  }
+}

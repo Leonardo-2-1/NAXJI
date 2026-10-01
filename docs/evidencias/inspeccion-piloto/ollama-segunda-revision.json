@@ -1,0 +1,122 @@
+{
+  "entorno": "PostgreSQL aislado; identidad de prueba inyectada; sklearn y Ollama reales; sin Supabase",
+  "modelo": "qwen2.5:7b",
+  "generacion_segundos": 4.586,
+  "solicitud_id": "71408a0a-91d6-4019-8bbd-b16dfca17ff1",
+  "informe_id": "9a59f606-1ddf-40ae-a45a-9f0f2cb67423",
+  "plantilla": {
+    "id": "6cfc93c0-415e-4cc6-bef1-86e4a2e3c990",
+    "nombre": "Informe de Inspección – Piloto NAXJI",
+    "tipo_informe_id": "5ca19109-707a-4984-9f2c-720164c58d66",
+    "area_id": "bb10cf7e-0cc0-4a1b-99e8-5447c7fcdf39",
+    "version": 1,
+    "activa": true,
+    "descripcion": "DEMOSTRACIÓN de inspección ambiental. No constituye un formato municipal oficial. El funcionario aporta datos fuente; Ollama propone el borrador. Sin resultados, actuaciones, hallazgos y conclusiones quedan pendientes de verificación. Revisión humana obligatoria.",
+    "secciones_salida": [
+      {
+        "clave": "antecedentes",
+        "titulo": "Antecedentes de la solicitud",
+        "obligatoria": true
+      },
+      {
+        "clave": "objetivo",
+        "titulo": "Objetivo y alcance de la inspección",
+        "obligatoria": true
+      },
+      {
+        "clave": "actuaciones",
+        "titulo": "Actuaciones y fuentes disponibles",
+        "obligatoria": true
+      },
+      {
+        "clave": "hallazgos",
+        "titulo": "Hallazgos y observaciones",
+        "obligatoria": true
+      },
+      {
+        "clave": "conclusiones",
+        "titulo": "Conclusiones",
+        "obligatoria": true
+      },
+      {
+        "clave": "recomendaciones",
+        "titulo": "Recomendaciones y verificaciones pendientes",
+        "obligatoria": false
+      }
+    ],
+    "estructura_legacy": false
+  },
+  "prediccion": {
+    "id": "4c9c171e-d2c4-42f6-93f5-c798422bbdc7",
+    "solicitud_id": "71408a0a-91d6-4019-8bbd-b16dfca17ff1",
+    "modelo": "SKLEARN_RF_IA_01",
+    "version_modelo": "RF-IA-01-200CASOS-v1",
+    "es_mock": false,
+    "resultado_validacion": "PENDIENTE",
+    "validado_por": null,
+    "validado_at": null,
+    "tipo_informe": {
+      "id": "5046f572-c961-4baf-9041-39bb60a1903c",
+      "codigo": "INFORME_LEGAL",
+      "nombre": "Informe Legal",
+      "confianza": 0.39993237804872767
+    },
+    "area_destino": {
+      "id": "db4b71e9-e78b-4f93-bc06-1e5679f49334",
+      "codigo": "MDT_GAJ",
+      "nombre": "Gerencia de Asesoría Jurídica",
+      "confianza": 0.3739702284726909
+    },
+    "normativas": [],
+    "advertencias": [
+      "Tema identificado: LPAG. No existe una norma verificable asociada; revisión documental pendiente.",
+      "La confianza corresponde al tema detectado; no acredita vigencia ni aplicabilidad jurídica. Confirme cada referencia documental para este caso.",
+      "Correspondencia de área propuesta con el ROF 2020; confirme el destino. Rendimiento institucional no validado."
+    ],
+    "temas_normativos": [
+      {
+        "codigo": "LPAG",
+        "etiqueta": "Ley del Procedimiento Administrativo General",
+        "confianza": 0.3525562936239439,
+        "normativa_ids": []
+      }
+    ]
+  },
+  "confirmacion": {
+    "tipo": "INFORME_INSPECCION",
+    "area": "MDT_SGGA",
+    "normativa_ids": []
+  },
+  "datos_fuente": {
+    "estado_resultados": "Sin resultados de inspección"
+  },
+  "propuesta": {
+    "objetivo": "El objetivo de la inspección es evaluar el estado ambiental del parque ficticio Aurora, incluyendo aspectos como la calidad del aire, el agua, la vegetación y la presencia de residuos.",
+    "hallazgos": "Pendiente de verificación: no se aportaron hallazgos o observaciones de la inspección.",
+    "actuaciones": "Pendiente de verificación: no se aportaron datos sobre actuaciones realizadas durante la inspección.",
+    "antecedentes": "Pendiente de verificación: no se aportaron antecedentes sobre la solicitud de inspección ambiental del parque ficticio Aurora.",
+    "conclusiones": "Pendiente de verificación: no se aportaron conclusiones basadas en la inspección.",
+    "recomendaciones": "Pendiente de verificación: no se aportaron recomendaciones para mejorar el estado ambiental del parque ficticio Aurora."
+  },
+  "edicion_guardada": {
+    "objetivo": "El objetivo de la inspección es evaluar el estado ambiental del parque ficticio Aurora, incluyendo aspectos como la calidad del aire, el agua, la vegetación y la presencia de residuos.",
+    "hallazgos": "Pendiente de verificación: no se aportaron hallazgos o observaciones de la inspección.",
+    "encabezado": {
+      "asunto": "PRUEBA NAXJI INSPECCIÓN: solicitud de inspección ambiental del parque ficticio Aurora, sin resultados",
+      "autor_id": "f05a451b-3941-41d1-b3e7-65a6372a0191",
+      "area_origen": "Subgerencia de Gestión Ambiental",
+      "area_destino": "Subgerencia de Gestión Ambiental"
+    },
+    "actuaciones": "Pendiente de verificación: no se aportaron datos sobre actuaciones realizadas durante la inspección.",
+    "antecedentes": "Pendiente de verificación: no se aportaron antecedentes sobre la solicitud de inspección ambiental del parque ficticio Aurora.",
+    "conclusiones": "Revisión humana ficticia NAXJI: no se aportaron resultados de inspección.\nPendiente de verificación: obtener el acta y las evidencias antes de emitir conclusiones sobre el parque ficticio Aurora.",
+    "recomendaciones": "Pendiente de verificación: no se aportaron recomendaciones para mejorar el estado ambiental del parque ficticio Aurora."
+  },
+  "http": {
+    "generacion": 201,
+    "edicion": 200,
+    "recuperacion": 200,
+    "descarga": 200
+  },
+  "limites": "Caso ficticio, no certifica fidelidad del modelo para cualquier entrada. Revisión humana obligatoria."
+}

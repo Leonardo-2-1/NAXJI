@@ -67,6 +67,12 @@ def db_local():
             piloto = c.execute("SELECT to_jsonb(p) FROM public.plantillas p WHERE id=%s", (pid,)).fetchone()[0]
             script(c, "database/seeds/paso3_estructura_piloto.sql")
             assert c.execute("SELECT to_jsonb(p) FROM public.plantillas p WHERE id=%s", (pid,)).fetchone()[0] == piloto
+            # La nueva columna no debe alterar filas ni inventar títulos históricos.
+            filas = c.execute("SELECT to_jsonb(v) FROM public.versiones_informe v ORDER BY id").fetchall()
+            for _ in range(2):
+                script(c, "database/migrations/20261001_02_titulo_version.sql")
+                assert c.execute("SELECT to_jsonb(v)-'titulo' FROM public.versiones_informe v ORDER BY id").fetchall() == filas
+                assert c.execute("SELECT count(*) FROM public.versiones_informe WHERE titulo IS NOT NULL").fetchone()[0] == 0
         yield settings, uid, pid, iid, contenido
     finally:
         with admin.connect(autocommit=True) as conexion:

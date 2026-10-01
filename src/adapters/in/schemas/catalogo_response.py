@@ -25,6 +25,7 @@ class PlantillaResponse(ResponseModel):
     descripcion: str | None = None
     secciones_salida: list[SeccionSalidaResponse]
     estructura_legacy: bool
+    formato_documento: str | None = None
 
 
 def representar_plantilla(plantilla) -> PlantillaResponse:
@@ -33,6 +34,7 @@ def representar_plantilla(plantilla) -> PlantillaResponse:
         area_id=plantilla.area_id, version=plantilla.version, activa=plantilla.activa,
         descripcion=plantilla.descripcion, secciones_salida=secciones_efectivas(plantilla.secciones_salida),
         estructura_legacy=plantilla.secciones_salida is None,
+        formato_documento=plantilla.formato_documento,
     )
 
 

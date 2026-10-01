@@ -1,0 +1,69 @@
+{
+  "fecha": "2026-10-01",
+  "causa": "Solo existían las plantillas técnicas v1/v2; el filtro exige igual tipo y, si hay restricción, igual destino. No se cambió el filtro.",
+  "catalogo_real": {
+    "fuente": "catalogo-actual.json; GET autenticados vía backend local Supabase/PostgreSQL; sesión cerrada",
+    "INFORME_INSPECCION": "668a217a-8f4f-47d6-99d8-0a7ab8661ea6",
+    "MDT_SGGA": "1973fec4-ba92-42e5-9de5-994dcd0c674b",
+    "escrituras_de_datos_en_supabase": false,
+    "sql_enviado_a_supabase": false
+  },
+  "plantilla_propuesta": {
+    "nombre": "Informe de Inspección – Piloto NAXJI",
+    "version": 1,
+    "tipo": "INFORME_INSPECCION",
+    "area": "MDT_SGGA",
+    "formato_oficial": false,
+    "campos_fuente": 7,
+    "campo_obligatorio": "estado_resultados",
+    "secciones_en_orden": ["antecedentes", "objetivo", "actuaciones", "hallazgos", "conclusiones", "recomendaciones"],
+    "seccion_opcional": "recomendaciones"
+  },
+  "sql_pendiente": [
+    "database/seeds/20261001_piloto_inspeccion_ambiental.sql",
+    "database/checks/20261001_verificar_piloto_inspeccion.sql"
+  ],
+  "cambios_de_esta_tarea": [
+    "database/seeds/20261001_piloto_inspeccion_ambiental.sql",
+    "database/checks/20261001_verificar_piloto_inspeccion.sql",
+    "scripts/consultar_compatibilidad_plantillas.py",
+    "src/adapters/out/ai/generador_borrador_ollama.py",
+    "tests/test_inspeccion_piloto.py",
+    "tests/fixtures/inspeccion_piloto.json",
+    "tests/frontend/nuevoInforme.test.mjs",
+    "README.md",
+    "docs/evidencias/inspeccion-piloto/"
+  ],
+  "pruebas": {
+    "python_con_postgresql_aislado": {"aprobadas": 189, "omitidas": 15, "segundos": 24.30},
+    "frontend": {"aprobadas": 41, "fallidas": 0},
+    "lint": "correcto",
+    "build": "correcto",
+    "sql": "Idempotencia completa, todos los registros anteriores intactos, siete campos nuevos, conflictos rechazados, prerrequisitos fallidos sin inserciones",
+    "flujo": "Creación solo asunto; sklearn real; corrección humana simulada a Inspección/SGGA sin normas; catálogo + filtro React; datos mínimos; error 502 y reintento 201; versión 2; recuperación por UUID y otra instancia; descarga 200 sin Ollama ni escrituras; historial y permisos 403/200",
+    "ollama_real": {"aprobadas": 1, "modelo": "qwen2.5:7b", "generacion_segundos": 4.409, "secciones": 6, "http": {"generacion": 201, "edicion": 200, "recuperacion": 200, "docx": 200}},
+    "word": "DOCX abierto mediante Word COM en solo lectura. Una página A4; PDF renderizado a PNG y revisado visualmente: título, seis secciones ordenadas, encabezado, aviso piloto y texto de versión 2 legibles. No se alteró el DOCX."
+  },
+  "revision_del_modelo": {
+    "primera_generacion": "12.727 s. El flujo HTTP pasó, pero la revisión detectó una negación no sustentada: no se habían realizado inspecciones. No se considera aprobada por calidad factual.",
+    "segunda_generacion": "4.586 s. Distinguió datos no aportados de actividades no realizadas; todavía ampliaba el alcance y aludía a conclusiones/recomendaciones no aportadas por el usuario.",
+    "correccion": "Instrucciones y descripciones del esquema aclaran ausencia de evidencia, alcance limitado y que Ollama propone las secciones. Prompt version ollama-fuentes-v5. No se modifica ni filtra silenciosamente el contenido generado.",
+    "final": "4.409 s. Seis secciones; no afirma hallazgos ni estado del parque, no emite conclusiones fácticas. Recomienda recabar evidencias. Texto completo en ollama-real.json.",
+    "clasificacion_sklearn": "El asunto ficticio se clasificó como Legal/Asesoría Jurídica. Se corrigió explícitamente a Inspección/Gestión Ambiental; no se alteró el predictor."
+  },
+  "pendientes": [
+    "Aplicación manual de la semilla tras revisión; no se ha aplicado a Supabase",
+    "Informe Legal sigue sin plantilla compatible",
+    "Inspección para otros destinos sigue sin plantilla compatible",
+    "Memorando tampoco tiene plantilla, pero no es clase del modelo actualmente cargado",
+    "Etiqueta de área de riesgo de desastres sin correspondencia en el catálogo, fuera de este cambio"
+  ],
+  "limites": [
+    "Supabase Auth real se usó solo para lectura del catálogo. Las escrituras del flujo y los permisos de aplicación se probaron en PostgreSQL aislado con identidad inyectada, no con RLS de Supabase.",
+    "React probado con JSDOM y API simulada, usando fixture contrastado contra el SQL real; no navegador interactivo con escritura en Supabase.",
+    "Los IDs de generación en ollama-real.json son ficticios de una base desechable ya eliminada. El DOCX y los JSON permanecen para revisión local.",
+    "Un prefijo y pruebas de un caso no garantizan ausencia de alucinaciones en cualquier entrada. Se conserva revisión humana.",
+    "Renderizador canónico sin LibreOffice disponible; la verificación visual utilizó Word instalado y PNG del PDF exportado.",
+    "Cambios locales anteriores conservados. Sin push, sin reentrenamiento, sin modificación de plantillas técnicas ni migraciones desplegadas."
+  ]
+}

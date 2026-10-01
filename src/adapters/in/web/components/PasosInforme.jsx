@@ -1,8 +1,8 @@
 const PASOS = [
   ["Asunto", "Defina qué necesita"],
   ["Confirmación", "Revise la sugerencia"],
-  ["Plantilla y datos", "Complete la información"],
-  ["Borrador", "Genere y revise"],
+  ["Elaboración", "Datos, propuesta y revisión"],
+  ["Vista previa", "Versión guardada y Word"],
 ];
 
 export default function PasosInforme({ actual, disponible, disabled, onChange }) {

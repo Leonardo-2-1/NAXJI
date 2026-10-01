@@ -18,7 +18,8 @@ const completo = {
 };
 
 test("el indicador retrocede al cambiar asunto o perder la confirmación", () => {
-  assert.equal(progresoInforme(completo).pasoDisponible, 4);
+  assert.equal(progresoInforme(completo).pasoDisponible, 3);
+  assert.equal(progresoInforme({ ...completo, informe: { numero_version: 1 } }).pasoDisponible, 4);
   assert.equal(progresoInforme({ ...completo, contextoVigente: false }).pasoDisponible, 2);
   assert.equal(progresoInforme({ ...completo, contextoVigente: false, prediccion: null }).pasoDisponible, 1);
   assert.equal(progresoInforme({ ...completo, contextoVigente: false, asuntoPredicho: "Anterior" }).pasoDisponible, 1);
@@ -42,7 +43,7 @@ test("el borrador exige plantilla compatible, campos cargados, origen y datos ob
 test("recuperación y reintento siguen accesibles aunque la plantilla guardada ya no esté activa", () => {
   for (const estado of ["PROCESANDO", "GENERADA"]) {
     const p = progresoInforme({ ...completo, solicitud: { estado }, plantillas: [], idCampos: "" });
-    assert.equal(p.pasoDisponible, 4);
+    assert.equal(p.pasoDisponible, 3);
     assert.equal(p.datosListos, false);
   }
 });

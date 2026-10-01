@@ -1,6 +1,7 @@
 import { seccionesDelBorrador, tituloDato } from "../services/estructuraBorrador";
+import EncabezadoDocumento from "./EncabezadoDocumento";
 
-function DatoLegible({ valor }) {
+export function DatoLegible({ valor }) {
   if (valor == null || valor === "") return <span>No registrado</span>;
   if (typeof valor === "boolean") return <span>{valor ? "Sí" : "No"}</span>;
   if (Array.isArray(valor)) return valor.length
@@ -11,14 +12,12 @@ function DatoLegible({ valor }) {
   return <span style={{ whiteSpace: "pre-wrap" }}>{String(valor)}</span>;
 }
 
-export default function EditorBorrador({ informe, contenido, onChange }) {
+export default function EditorBorrador({ informe, contenido, onChange, encabezadoOficial, onEncabezadoChange }) {
   const secciones = seccionesDelBorrador(informe);
   const claves = new Set(secciones.map(s => s.clave));
   const adicionales = Object.entries(contenido).filter(([clave]) => clave !== "encabezado" && !claves.has(clave));
   return <>
-    {contenido.encabezado != null && <section aria-label="Encabezado del documento">
-      <h3>Encabezado</h3><DatoLegible valor={contenido.encabezado} />
-    </section>}
+    <EncabezadoDocumento encabezado={contenido.encabezado} datos={encabezadoOficial} onChange={onEncabezadoChange} />
     {secciones.map(seccion => <div className="form-group" key={seccion.clave}>
       <label htmlFor={`contenido-${seccion.clave}`}>{seccion.titulo}{seccion.obligatoria ? " *" : " (opcional)"}</label>
       <textarea id={`contenido-${seccion.clave}`} rows="6" required={seccion.obligatoria}

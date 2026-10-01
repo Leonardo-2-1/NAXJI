@@ -1,0 +1,684 @@
+{
+  "fecha": "2026-10-01",
+  "base_commit": "cd7d3d3b879d227978a844f4223397cc9f815ed3",
+  "configuracion": {
+    "demo": "http://localhost:5173 — backend memory/mock existente",
+    "real": "http://localhost:5174 — backend PostgreSQL/Supabase existente",
+    "recursos": "Build de producción, Vite preview en loopback 5188, tres descargas HTTP sin caché del cliente",
+    "ejecucion": "React real en JSDOM y StrictMode, Axios con HTTP real; sin motor de renderizado visual",
+    "baseline": "Copia aislada del frontend del commit base en .venv/login-baseline, sin alterar el checkout"
+  },
+  "metodo": {
+    "muestras_por_fase_y_modo": 3,
+    "unidad_tiempos": "milisegundos",
+    "anonymous": "Desde montar Login hasta configuración y comprobación de sesión finalizadas; excluye arrancar Vite y cargar el módulo SSR",
+    "login": "Desde enviar el formulario hasta ver el asunto habilitado con catálogos listos",
+    "recovery": "Nueva instancia del frontend en /nuevo-informe conservando solo su cookie de prueba en memoria (o identidad demo)",
+    "formulario_visible": "Desde enviar login o montar recuperación hasta detectar el campo asunto, aún en carga si faltan catálogos",
+    "catalogos": "Desde el inicio de la primera petición de tipos/áreas hasta terminar ambas; se consultan en paralelo",
+    "precision_dom": "Sondeo de hasta 30 ms; las duraciones HTTP se miden por petición con performance.now",
+    "gzip": "Tamaño calculado con gzipSync; no implica que Vite sirva gzip en desarrollo"
+  },
+  "resultados": {
+    "demo": {
+      "antes": {
+        "anonymous": {
+          "total_mediana_ms": 50,
+          "total_rango_ms": [
+            49,
+            73
+          ],
+          "http": {
+            "/auth/config": {
+              "mediana_ms": 6,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/me": {
+              "mediana_ms": 3,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                401
+              ]
+            }
+          }
+        },
+        "login": {
+          "total_mediana_ms": 148,
+          "total_rango_ms": [
+            146,
+            156
+          ],
+          "http": {
+            "/areas": {
+              "mediana_ms": 7,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/me": {
+              "mediana_ms": 9,
+              "peticiones_por_muestra": [
+                3,
+                3,
+                3
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/tipos-informe": {
+              "mediana_ms": 8,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            }
+          },
+          "formulario_visible_mediana_ms": 103,
+          "catalogos_en_paralelo_mediana_ms": 8
+        },
+        "recovery": {
+          "total_mediana_ms": 92,
+          "total_rango_ms": [
+            84,
+            93
+          ],
+          "http": {
+            "/areas": {
+              "mediana_ms": 7,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/config": {
+              "mediana_ms": 6,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/me": {
+              "mediana_ms": 4.5,
+              "peticiones_por_muestra": [
+                2,
+                2,
+                2
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/tipos-informe": {
+              "mediana_ms": 7,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            }
+          },
+          "formulario_visible_mediana_ms": 49,
+          "catalogos_en_paralelo_mediana_ms": 7
+        }
+      },
+      "despues": {
+        "anonymous": {
+          "total_mediana_ms": 51,
+          "total_rango_ms": [
+            43,
+            74
+          ],
+          "http": {
+            "/auth/config": {
+              "mediana_ms": 8,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            }
+          }
+        },
+        "login": {
+          "total_mediana_ms": 137,
+          "total_rango_ms": [
+            133,
+            151
+          ],
+          "http": {
+            "/areas": {
+              "mediana_ms": 8,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/me": {
+              "mediana_ms": 14,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/tipos-informe": {
+              "mediana_ms": 9,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            }
+          },
+          "formulario_visible_mediana_ms": 101,
+          "catalogos_en_paralelo_mediana_ms": 9
+        },
+        "recovery": {
+          "total_mediana_ms": 129,
+          "total_rango_ms": [
+            125,
+            136
+          ],
+          "http": {
+            "/areas": {
+              "mediana_ms": 9,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/config": {
+              "mediana_ms": 15,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/me": {
+              "mediana_ms": 4,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/tipos-informe": {
+              "mediana_ms": 10,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            }
+          },
+          "formulario_visible_mediana_ms": 88,
+          "catalogos_en_paralelo_mediana_ms": 9
+        }
+      }
+    },
+    "real": {
+      "antes": {
+        "anonymous": {
+          "total_mediana_ms": 46,
+          "total_rango_ms": [
+            37,
+            71
+          ],
+          "http": {
+            "/auth/config": {
+              "mediana_ms": 4,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/refresh": {
+              "mediana_ms": 3.0,
+              "peticiones_por_muestra": [
+                2,
+                2,
+                2
+              ],
+              "codigos_http": [
+                401
+              ]
+            }
+          }
+        },
+        "login": {
+          "total_mediana_ms": 9515,
+          "total_rango_ms": [
+            9330,
+            10621
+          ],
+          "http": {
+            "/areas": {
+              "mediana_ms": 3129,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/login": {
+              "mediana_ms": 2449,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/me": {
+              "mediana_ms": 2008,
+              "peticiones_por_muestra": [
+                3,
+                3,
+                3
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/tipos-informe": {
+              "mediana_ms": 3180,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            }
+          },
+          "formulario_visible_mediana_ms": 6322,
+          "catalogos_en_paralelo_mediana_ms": 3180
+        },
+        "recovery": {
+          "total_mediana_ms": 7372,
+          "total_rango_ms": [
+            7252,
+            7392
+          ],
+          "http": {
+            "/areas": {
+              "mediana_ms": 3099,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/config": {
+              "mediana_ms": 4,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/me": {
+              "mediana_ms": 1875.5,
+              "peticiones_por_muestra": [
+                2,
+                2,
+                2
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/refresh": {
+              "mediana_ms": 2332,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/tipos-informe": {
+              "mediana_ms": 3092,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            }
+          },
+          "formulario_visible_mediana_ms": 4239,
+          "catalogos_en_paralelo_mediana_ms": 3100
+        }
+      },
+      "despues": {
+        "anonymous": {
+          "total_mediana_ms": 53,
+          "total_rango_ms": [
+            45,
+            78
+          ],
+          "http": {
+            "/auth/config": {
+              "mediana_ms": 6,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/refresh": {
+              "mediana_ms": 3,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                401
+              ]
+            }
+          }
+        },
+        "login": {
+          "total_mediana_ms": 7577,
+          "total_rango_ms": [
+            7428,
+            7623
+          ],
+          "http": {
+            "/areas": {
+              "mediana_ms": 3038,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/login": {
+              "mediana_ms": 2533,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/me": {
+              "mediana_ms": 1866,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/tipos-informe": {
+              "mediana_ms": 3159,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            }
+          },
+          "formulario_visible_mediana_ms": 4447,
+          "catalogos_en_paralelo_mediana_ms": 3158
+        },
+        "recovery": {
+          "total_mediana_ms": 7475,
+          "total_rango_ms": [
+            7317,
+            7554
+          ],
+          "http": {
+            "/areas": {
+              "mediana_ms": 3189,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/config": {
+              "mediana_ms": 4,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/me": {
+              "mediana_ms": 1851,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/auth/refresh": {
+              "mediana_ms": 2443,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            },
+            "/tipos-informe": {
+              "mediana_ms": 3119,
+              "peticiones_por_muestra": [
+                1,
+                1,
+                1
+              ],
+              "codigos_http": [
+                200
+              ]
+            }
+          },
+          "formulario_visible_mediana_ms": 4237,
+          "catalogos_en_paralelo_mediana_ms": 3189
+        }
+      }
+    }
+  },
+  "recursos_iniciales": {
+    "antes": {
+      "bytes": 368743,
+      "gzip_bytes": 116039,
+      "descarga_http_mediana_ms": 13.64,
+      "peticiones": 3
+    },
+    "despues": {
+      "bytes": 333138,
+      "gzip_bytes": 106811,
+      "descarga_http_mediana_ms": 11.26,
+      "peticiones": 3
+    }
+  },
+  "cambios": [
+    "Login con identidad visual compartida, formulario responsive, etiquetas, carga, errores y reintentos; sin menú ni asistente de pasos.",
+    "ProtectedRoute verifica /auth/me antes de mostrar contenido. Login no repite esa lectura y la recuperación inicial solo recupera el token.",
+    "Consultas simultáneas del perfil comparten una petición; las siguientes consultas vuelven al servidor, sin caché de permisos.",
+    "Un 401 de renovación no provoca otra renovación automática. Respuestas de sesiones anteriores se descartan por revisión.",
+    "Código y CSS del formulario diferidos; descarga en paralelo con el acceso, sin adelantar consultas de datos privados.",
+    "Catálogos conservan sus consultas y autorizaciones existentes. No se agregaron cachés persistentes."
+  ],
+  "comprobaciones": {
+    "frontend_pruebas_aprobadas": 40,
+    "frontend_pruebas_omitidas": 0,
+    "lint": "correcto",
+    "build": "correcto",
+    "casos": [
+      "Supabase y demo",
+      "recuperación por cookie",
+      "401 y 403",
+      "configuración y perfil con 503/reintento",
+      "roles de consulta",
+      "respuestas tardías",
+      "renovación simultánea",
+      "error de módulo diferido",
+      "flujo completo de informe simulado con UUID, normas, plantilla, reintento y versión 2"
+    ],
+    "viewport_dom_px": [
+      1440,
+      390
+    ],
+    "revision_visual_real": false,
+    "contrastes_calculados": {
+      "boton_primario": 6.42,
+      "texto_principal": 14.24,
+      "texto_secundario": 6.15,
+      "texto_panel_oscuro": 9.54,
+      "error": 6.8,
+      "estado": 6.29
+    }
+  },
+  "alcance": {
+    "sin_push": true,
+    "sin_cambios_backend": true,
+    "sin_cambios_modelo_o_plantillas": true,
+    "sin_escrituras_datos_aplicacion_supabase": true,
+    "auth_real": "Inicio, renovación y cierre local de sesiones de prueba autorizadas; sin crear usuarios ni cambiar configuración.",
+    "tokens_reales": "Solo memoria del frontend y cookie HttpOnly existente; no localStorage ni sessionStorage.",
+    "demo": "Se conserva únicamente el identificador de identidad demo en sessionStorage, comportamiento previo."
+  },
+  "limites": [
+    "La herramienta de navegador no dispone de Chrome ni de una pestaña conectada. No hay revisión visual ni capturas reales.",
+    "Cambiar innerWidth en JSDOM comprueba comportamiento del DOM, no maquetación, reflujo ni interacción real con teclado/lector de pantalla.",
+    "El cliente Node reenvía su propia cookie solo en memoria. No verifica políticas Secure/SameSite del navegador.",
+    "No se midieron FCP/LCP, parseo de recursos ni pintura en un navegador. La descarga HTTP de recursos es una medición separada del build de producción.",
+    "Tres muestras y latencia remota variable: las medianas no garantizan la misma reducción en cada ejecución.",
+    "La recuperación de sesión no demuestra mejora de tiempo; el modo demo mantiene un pequeño coste de carga del módulo al recuperar.",
+    "Los catálogos siguen alrededor de tres segundos en Supabase. Incluyen validación remota y lectura PostgreSQL; no se instrumentaron internamente por separado.",
+    "No se invocaron predicción sklearn ni generación Ollama. Sus tiempos no forman parte de estas mediciones."
+  ],
+  "archivos": [
+    "docs/evidencias/login-antes-demo.json",
+    "docs/evidencias/login-antes-real.json",
+    "docs/evidencias/login-antes-recursos.json",
+    "docs/evidencias/login-despues-demo.json",
+    "docs/evidencias/login-despues-real.json",
+    "docs/evidencias/login-despues-recursos.json",
+    "scripts/medir-acceso.mjs",
+    "scripts/medir-recursos.mjs",
+    "src/adapters/in/web/App.jsx",
+    "src/adapters/in/web/components/EstadoAcceso.jsx",
+    "src/adapters/in/web/components/ProtectedRoute.jsx",
+    "src/adapters/in/web/pages/Login.jsx",
+    "src/adapters/in/web/pages/NuevoInforme.jsx",
+    "src/adapters/in/web/services/api.js",
+    "src/adapters/in/web/services/authService.js",
+    "src/adapters/in/web/services/cargarFormulario.js",
+    "src/adapters/in/web/services/session.js",
+    "src/adapters/in/web/styles/acceso.css",
+    "src/adapters/in/web/styles/app.css",
+    "src/adapters/in/web/styles/identidad.css",
+    "src/adapters/in/web/styles/nuevoInforme.css",
+    "tests/frontend/acceso.test.mjs"
+  ]
+}

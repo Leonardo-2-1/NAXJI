@@ -1,0 +1,64 @@
+{
+  "fuente_sha256": "f5c5831487127747141251fc1e3538e34405f34a7384f97999bc15c74411464d",
+  "casos": [
+    {
+      "caso": "anexo08-sin-resultados",
+      "paginas": 1,
+      "modelo": "qwen2.5:7b",
+      "segundos": 2.951,
+      "http": {
+        "generacion": 201,
+        "edicion": 200,
+        "recuperacion": 200,
+        "descarga": 200,
+        "descarga_ajena": 403
+      },
+      "revision_visual": "Todas las paginas examinadas; sin solapes, corte de cierre ni paginas casi vacias."
+    },
+    {
+      "caso": "anexo08-con-observaciones",
+      "paginas": 1,
+      "modelo": "qwen2.5:7b",
+      "segundos": 3.951,
+      "http": {
+        "generacion": 201,
+        "edicion": 200,
+        "recuperacion": 200,
+        "descarga": 200,
+        "descarga_ajena": 403
+      },
+      "revision_visual": "Todas las paginas examinadas; sin solapes, corte de cierre ni paginas casi vacias."
+    }
+  ],
+  "tests": {
+    "python": {
+      "passed": 236,
+      "skipped": 19
+    },
+    "frontend": {
+      "passed": 51
+    },
+    "ollama_real_anexo08": 2,
+    "ollama_real_v1": 2,
+    "lint": "ok",
+    "build": "ok"
+  },
+  "motor_render": "Microsoft Word, solo lectura, macros y actualizacion de enlaces desactivadas",
+  "supabase": "Solo lectura para diagnostico; ninguna escritura",
+  "limites": [
+    "Adaptacion PILOTO desde PDF; no DOCX institucional original",
+    "Falta confirmar vigencia, logo y ruta institucional",
+    "Auth real no ejercitado; identidad ficticia en base aislada",
+    "Validacion semantica conservadora; requiere revision humana"
+  ],
+  "sha256_archivos": {
+    "anexo08-con-observaciones-pagina-1.png": "2dea4852769ccf3aa015eb5515aba7baceeb0030f3a941ebf2ea115bf07c6f63",
+    "anexo08-con-observaciones.docx": "2260444a56d33d221f7d080e12a5c2328127d056a300ad05911b1fbebda3154a",
+    "anexo08-con-observaciones.pdf": "107db3e7b55daa4920d8ed5bb0344e1519a0aef35d36373b0d2657c7c9c90c6c",
+    "anexo08-sin-resultados-pagina-1.png": "637c80d3e0bfcc66f84cf549f1e86f5b8e40bc36aa21d61bccf07e3c37ef433e",
+    "anexo08-sin-resultados.docx": "b71a15319b4cf29612c36e38fea1abb689aba0a55dc736658d0b806678e8fdf1",
+    "anexo08-sin-resultados.pdf": "ca2cfcc83cc227caa8d21936683148cfbb397ed875b19f03c767192e59aa56e6",
+    "fuente-anexo08.png": "5a3b686511a6e4a0b7cfb6af74bc2af7d292b6d2398006cfb0a39fe27222416e",
+    "fuente-municipal-extracto.pdf": "7dcc81618791c932cfe0b02884aef20fed08cc55318b2ec5be4e88bf67b1b2d0"
+  }
+}

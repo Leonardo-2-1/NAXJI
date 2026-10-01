@@ -1,5 +1,5 @@
 import axios from "axios";
-import { authConfig, clearSession, getAccessToken } from "./session";
+import { authConfig, clearSession, getAccessToken, revisionSesion } from "./session";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "/api",
@@ -10,7 +10,11 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(async (config) => {
+  const revision = revisionSesion();
   const token = await getAccessToken();
+  if (revision !== revisionSesion()) throw new axios.CanceledError("La sesión cambió.");
+  config._sessionRevision = revision;
+  config._apiAutenticada = true;
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -20,9 +24,17 @@ api.interceptors.request.use(async (config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.config._sessionRevision !== revisionSesion()) throw new axios.CanceledError("La sesión cambió.");
+    return response;
+  },
   async (error) => {
-    if (error.response?.status === 401) {
+    // Un 401 de /auth/refresh en el interceptor de petición no es un fallo
+    // de la API protegida: no debe disparar otra renovación de la misma cookie.
+    if (error.config?._apiAutenticada && error.config._sessionRevision !== revisionSesion()) {
+      throw new axios.CanceledError("La sesión cambió.");
+    }
+    if (error.response?.status === 401 && error.config?._apiAutenticada) {
       if (error.config && !error.config._authRetried && (await authConfig()).mode === "supabase") {
         error.config._authRetried = true;
         try {

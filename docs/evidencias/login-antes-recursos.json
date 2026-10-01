@@ -1,0 +1,49 @@
+{
+  "phase": "antes",
+  "scope": "HTTP loopback, build producción, recursos iniciales estáticos; no mide FCP/LCP ni parseo/render del navegador",
+  "resources": [
+    {
+      "file": "index.html",
+      "bytes": 488,
+      "gzip_bytes": 322
+    },
+    {
+      "file": "assets/index-J9JRLPs-.js",
+      "bytes": 350291,
+      "gzip_bytes": 111389
+    },
+    {
+      "file": "assets/index-DqBU3SYI.css",
+      "bytes": 17964,
+      "gzip_bytes": 4328
+    }
+  ],
+  "bytes": 368743,
+  "gzip_bytes": 116039,
+  "runs": [
+    {
+      "ms": 31.01,
+      "statuses": [
+        200,
+        200,
+        200
+      ]
+    },
+    {
+      "ms": 13.64,
+      "statuses": [
+        200,
+        200,
+        200
+      ]
+    },
+    {
+      "ms": 12.63,
+      "statuses": [
+        200,
+        200,
+        200
+      ]
+    }
+  ]
+}

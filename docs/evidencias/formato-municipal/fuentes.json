@@ -1,0 +1,81 @@
+{
+  "fecha_revision": "2026-10-01",
+  "conclusion": "El caso observado permite un informe interno de inspección. No acredita un acta levantada durante una diligencia ni un procedimiento formal de supervisión ambiental. El Anexo 08 ofrece una base general municipal, no un formato específico de inspección de Gestión Ambiental.",
+  "limite_aplicabilidad": "La directiva alcanza a todas las unidades municipales. El ROF consultado identifica Gestión Ambiental; esto respalda usar una comunicación interna, pero no certifica vigencia consolidada en 2026, competencia de un firmante concreto ni la ruta Alcaldía hacia Gestión Ambiental del DOCX v3.",
+  "fuentes": [
+    {
+      "url": "https://munieltambo.gob.pe/documentos-gestion03/",
+      "entidad": "Municipalidad Distrital de El Tambo",
+      "fecha": null,
+      "tipo": "Índice de documentos de gestión",
+      "verificacion": "Revisado; referencia a formatos de comunicación y reglamento de supervisión. No acredita por sí solo un modelo específico de inspección."
+    },
+    {
+      "url": "https://www.gob.pe/institucion/munieltambo/informes-publicaciones/4105169-directiva-de-normas-generales-para-la-comunicacion-escrita",
+      "archivo_url": "https://cdn.www.gob.pe/uploads/document/file/4399256/Formatos_Comunicacion_Escrita.pdf?v=1744233853",
+      "entidad": "Municipalidad Distrital de El Tambo / Gerencia Municipal",
+      "fecha": "2019-01-30",
+      "tipo": "Directiva General 001-2019-MDT/GM y modelos de comunicación escrita",
+      "paginas_pdf": {"aprobacion": 1, "alcance": 5, "informe": 7, "informe_tecnico": 8, "presentacion": [9,10], "anexo08":19, "anexo09":20},
+      "evidencia_gestion_ambiental": "Apartado IV: aplicación a todas las unidades orgánicas. No se encontró en este documento un formato exclusivo de inspección de Gestión Ambiental.",
+      "verificacion": "PDF completo de 63 páginas revisado visualmente. MD5 coincide con ETag del servidor: 0c70cdcd2a13df2d2c6aceba89206583. El expediente incorpora duplicados y proyectos: se usa el anexo posterior a la directiva aprobada (página 19).",
+      "vigencia": "Acto y modelo de 2019 verificables; no se halló sustitución específica en la búsqueda realizada. Esto no prueba vigencia consolidada actual."
+    },
+    {
+      "url": "https://www.gob.pe/institucion/munieltambo/normas-legales/6862621-021-2019-mdt-gm",
+      "archivo_url": "https://cdn.www.gob.pe/uploads/document/file/8211294/6862621-rgm021-2019.pdf?v=1751036542",
+      "entidad": "Municipalidad Distrital de El Tambo / Gerencia Municipal",
+      "fecha": "2019-01-30",
+      "tipo": "Resolución de Gerencia Municipal 021-2019-MDT/GM",
+      "verificacion": "Artículo primero aprueba la Directiva General 001-2019-MDT/GM. No se reutilizan número, firmas, sellos ni registros del acto como datos de un informe nuevo."
+    },
+    {
+      "url": "https://www.gob.pe/institucion/munieltambo/normas-legales/6695032-012-2020-mdt-cm-so",
+      "archivo_url": "https://cdn.www.gob.pe/uploads/document/file/4258543/MDT_ROF_2020.pdf.pdf?v=1678902895",
+      "entidad": "Municipalidad Distrital de El Tambo / Concejo Municipal",
+      "fecha": "2020-07-30",
+      "tipo": "Ordenanza 012-2020 y ROF 2020",
+      "evidencia_gestion_ambiental": "Artículos 121–122, páginas PDF 62–63: Subgerencia de Gestión Ambiental y sus funciones; unidad dependiente de Servicios Públicos.",
+      "verificacion": "Sustenta la relación funcional ambiental; no establece por sí solo un formato de inspección ni verifica cargos actuales. No usar las siglas del listado antiguo de 2019 sin confirmación institucional."
+    },
+    {
+      "url": "https://www.gob.pe/institucion/munieltambo/normas-legales/6695057-005-2019-mdt-cm-so",
+      "entidad": "Municipalidad Distrital de El Tambo / Concejo Municipal",
+      "fecha": "2019-04-22",
+      "tipo": "Ordenanza 005-2019, Reglamento de Supervisión Ambiental",
+      "verificacion": "Ficha oficial revisada. No se toma como fuente de formato de informe interno ni se afirma su vigencia frente a normas posteriores."
+    },
+    {
+      "url": "https://www.gob.pe/institucion/munieltambo/normas-legales/6695066-013-2019-mdt-cm-so",
+      "publicacion": "https://www.gob.pe/institucion/munieltambo/informes-publicaciones/3945470-reglamento-de-la-supervision-ambiental",
+      "archivo_url": "https://cdn.www.gob.pe/uploads/document/file/4189405/MDT_Reglamento%20de%20la%20Supervisi%C3%B3n%20Ambiental_2019.pdf.pdf?v=1744218700",
+      "entidad": "Municipalidad Distrital de El Tambo / Concejo Municipal",
+      "fecha": "2019-10-16",
+      "fecha_publicacion_catalogo": "2023-02-27",
+      "tipo": "Ordenanza 013-2019, aprobación de Reglamento de Supervisión Ambiental",
+      "evidencia_gestion_ambiental": "Regula supervisión de administrados dentro de la jurisdicción. El acto encarga implementación a las gerencias indicadas en él; no acredita que una observación de bolsas constituya ese procedimiento.",
+      "verificacion": "El PDF descargado contiene dos páginas del acto. No contiene los 36 artículos ni los tres anexos que anuncia. No se reconstruyó un formato formal a partir de anexos ausentes."
+    },
+    {
+      "url": "https://www.gob.pe/institucion/oefa/informes-publicaciones/8442725-supervision-ambiental",
+      "archivo_url": "https://cdn.www.gob.pe/uploads/document/file/10401081/8442725-formato-de-informe-de-supervision.docx?v=1785878687",
+      "entidad": "Organismo de Evaluación y Fiscalización Ambiental (OEFA)",
+      "fecha": null,
+      "fecha_guia": "2019-03",
+      "tipo": "Kit de supervisión ambiental: formato DOCX y guía de supervisores",
+      "verificacion": "DOCX y guía revisados. Incluyen identificación de administrado/unidad fiscalizable y evaluación de obligaciones. Se usan para distinguir el procedimiento formal; no se transfieren campos, numeración, firmas ni autoridad al formato municipal. Fecha de primera edición de la guía comprobada; no se infiere fecha de publicación del kit desde el parámetro de descarga."
+    }
+  ],
+  "repositorio_antes_de_cambios": {
+    "plantilla_institucional_nativa": "No encontrada",
+    "archivos": ["src/adapters/out/documents/exportador_docx.py", "docs/evidencias/inspeccion-contenido/", "docs/evidencias/inspeccion-piloto/", "docs/evidencias/piloto-v2/"],
+    "resultado": "Exportador programático y ejemplos piloto. No eran plantillas institucionales aprobadas. La nueva base DOCX se reconstruye desde el PDF municipal y se identifica como adaptación revisable."
+  },
+  "pendientes_institucionales": [
+    "Confirmación municipal de vigencia y aplicación del Anexo 08 a este circuito interno, o la directiva vigente que lo reemplace.",
+    "DOCX/DOTX vigente de informe interno y archivo digital del logotipo autorizado, o aprobación expresa de esta reconstrucción.",
+    "Nombre y cargo de destinatario y firmante, unidad emisora, siglas vigentes y ruta de firma; revisar Alcaldía hacia Gestión Ambiental.",
+    "Números de informe, documento y expediente asignados por el registro institucional; datos de emisión y adjuntos reales.",
+    "Si se pretende supervisión formal: reglamento municipal completo vigente con anexos, habilitación/competencia de la unidad y evidencia del procedimiento. Un DOCX de OEFA no sustituye esos documentos."
+  ]
+}

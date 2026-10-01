@@ -1,0 +1,8 @@
+PROPUESTA DE CORRECCIÓN HUMANA DE LAS CONCLUSIONES DEL BORRADOR V3
+No guardada en Supabase. No sustituye ni altera ninguna versión histórica.
+
+Según las observaciones aportadas por el solicitante, durante el intervalo de 10:20 a 10:40 se observaron dos bolsas cerradas junto al acceso norte y ambas permanecían allí al terminar la observación. Esta es una observación descrita, limitada a ese lugar y a ese intervalo; no permite afirmar cuál era el contenido de las bolsas, su origen ni cuánto tiempo llevaban allí.
+
+Las bolsas no fueron abiertas ni pesadas, según la información aportada. La ficha F-01 y las fotografías E-01 y E-02 están descritas, pero no adjuntas ni cotejadas en el sistema. Su obtención y revisión, junto con la comprobación de ubicación y competencia territorial, siguen pendientes. No corresponde concluir que no existen observaciones, ni afirmar que el contenido de las bolsas sean residuos verificados.
+
+Para aplicarla: abrir la solicitud existente, editar únicamente la sección Conclusiones y guardar una nueva versión. Revisar también cualquier frase de otras secciones que transforme «bolsas con residuos» del asunto en un contenido comprobado. La v3 debe continuar disponible sin modificaciones. Esta propuesta no asigna número a una versión todavía no guardada.

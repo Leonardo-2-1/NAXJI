@@ -1,0 +1,346 @@
+{
+  "fecha_utc": "2026-10-01T18:00:52.019747+00:00",
+  "fuente_esperada": "database\\seeds\\20261001_piloto_inspeccion_ambiental.sql",
+  "sha256_sql": "804a95858ff202173b20749f5586a58dcd5305479156311211a885b4e12b55d0",
+  "operacion": "Solo SELECT en PostgreSQL REPEATABLE READ / READ ONLY; no se ejecutó la semilla",
+  "resultado": {
+    "integra": true,
+    "diferencias": [],
+    "comprobaciones": {
+      "tipo_y_area_activos": true,
+      "metadatos_tipo_area": true,
+      "secciones_orden_titulos_y_obligatoriedad": true,
+      "campos_completos_incluida_configuracion": true,
+      "columnas_para_versiones_y_docx": true,
+      "consulta_read_only": true
+    },
+    "campos_comparados": [
+      {
+        "clave": "estado_resultados",
+        "coincide": true
+      },
+      {
+        "clave": "lugar_inspeccion",
+        "coincide": true
+      },
+      {
+        "clave": "fecha_inspeccion",
+        "coincide": true
+      },
+      {
+        "clave": "alcance_solicitado",
+        "coincide": true
+      },
+      {
+        "clave": "resultados_observados",
+        "coincide": true
+      },
+      {
+        "clave": "referencias_conocidas",
+        "coincide": true
+      },
+      {
+        "clave": "informacion_pendiente",
+        "coincide": true
+      }
+    ]
+  },
+  "definicion_esperada": {
+    "nombre": "Informe de Inspección – Piloto NAXJI",
+    "version": 1,
+    "activa": true,
+    "descripcion": "DEMOSTRACIÓN de inspección ambiental. No constituye un formato municipal oficial. El funcionario aporta datos fuente; Ollama propone el borrador. Sin resultados, actuaciones, hallazgos y conclusiones quedan pendientes de verificación. Revisión humana obligatoria.",
+    "secciones_salida": [
+      {
+        "clave": "antecedentes",
+        "titulo": "Antecedentes de la solicitud",
+        "obligatoria": true
+      },
+      {
+        "clave": "objetivo",
+        "titulo": "Objetivo y alcance de la inspección",
+        "obligatoria": true
+      },
+      {
+        "clave": "actuaciones",
+        "titulo": "Actuaciones y fuentes disponibles",
+        "obligatoria": true
+      },
+      {
+        "clave": "hallazgos",
+        "titulo": "Hallazgos y observaciones",
+        "obligatoria": true
+      },
+      {
+        "clave": "conclusiones",
+        "titulo": "Conclusiones",
+        "obligatoria": true
+      },
+      {
+        "clave": "recomendaciones",
+        "titulo": "Recomendaciones y verificaciones pendientes",
+        "obligatoria": false
+      }
+    ],
+    "tipo_codigo": "INFORME_INSPECCION",
+    "area_codigo": "MDT_SGGA",
+    "campos": [
+      {
+        "clave": "estado_resultados",
+        "etiqueta": "Información disponible sobre la inspección",
+        "tipo_dato": "select",
+        "obligatorio": true,
+        "orden": 1,
+        "configuracion": {
+          "ayuda": "Indique si dispone de resultados. Sin resultados no significa que se haya inspeccionado ni que no existan incidencias.",
+          "opciones": [
+            "Sin resultados de inspección",
+            "Información parcial por verificar",
+            "Resultados documentados disponibles"
+          ],
+          "valores_sin_resultados": [
+            "Sin resultados de inspección"
+          ]
+        },
+        "activo": true
+      },
+      {
+        "clave": "lugar_inspeccion",
+        "etiqueta": "Lugar o elemento a inspeccionar",
+        "tipo_dato": "text",
+        "obligatorio": false,
+        "orden": 2,
+        "configuracion": {
+          "ayuda": "Opcional. Identifique el lugar solo si lo conoce. Su identificación no acredita una visita ni su estado."
+        },
+        "activo": true
+      },
+      {
+        "clave": "fecha_inspeccion",
+        "etiqueta": "Fecha de la inspección realizada, si se conoce",
+        "tipo_dato": "date",
+        "obligatorio": false,
+        "orden": 3,
+        "configuracion": {
+          "ayuda": "Opcional. Registre la fecha solo si la inspección ocurrió y está documentada. No ingrese una fecha supuesta."
+        },
+        "activo": true
+      },
+      {
+        "clave": "alcance_solicitado",
+        "etiqueta": "Aspectos que se solicita verificar",
+        "tipo_dato": "textarea",
+        "obligatorio": false,
+        "orden": 4,
+        "configuracion": {
+          "ayuda": "Opcional. Indique qué se necesita inspeccionar. Una petición de comprobación no es un hallazgo."
+        },
+        "activo": true
+      },
+      {
+        "clave": "resultados_observados",
+        "etiqueta": "Observaciones y resultados documentados",
+        "tipo_dato": "textarea",
+        "obligatorio": false,
+        "orden": 5,
+        "configuracion": {
+          "ayuda": "Opcional. Aporte hechos observados, quién o qué documento los respalda y sus límites. Si no dispone de resultados, deje este campo vacío; no redacte hallazgos ni conclusiones anticipados.",
+          "rol_fuente": "hechos"
+        },
+        "activo": true
+      },
+      {
+        "clave": "referencias_conocidas",
+        "etiqueta": "Actas, documentos y referencias disponibles",
+        "tipo_dato": "textarea",
+        "obligatorio": false,
+        "orden": 6,
+        "configuracion": {
+          "ayuda": "Opcional. Identifique documentos, enlaces o extractos que conoce. Un enlace o número no acredita su contenido ni su vigencia; NAXJI no consulta automáticamente esas fuentes.",
+          "rol_fuente": "referencias"
+        },
+        "activo": true
+      },
+      {
+        "clave": "informacion_pendiente",
+        "etiqueta": "Información y evidencias pendientes",
+        "tipo_dato": "textarea",
+        "obligatorio": false,
+        "orden": 7,
+        "configuracion": {
+          "ayuda": "Opcional. Señale observaciones, mediciones o evidencias que aún deben obtenerse o verificarse."
+        },
+        "activo": true
+      }
+    ]
+  },
+  "lectura_guardada": {
+    "transaction_read_only": "on",
+    "plantillas": [
+      {
+        "id": "c3e99fe3-1907-426a-a690-cd92ce0ada6d",
+        "activa": true,
+        "campos": [
+          {
+            "id": "dd53dd9f-e9c4-4eb0-add4-8abda661f339",
+            "clave": "estado_resultados",
+            "orden": 1,
+            "activo": true,
+            "etiqueta": "Información disponible sobre la inspección",
+            "tipo_dato": "select",
+            "obligatorio": true,
+            "plantilla_id": "c3e99fe3-1907-426a-a690-cd92ce0ada6d",
+            "configuracion": {
+              "ayuda": "Indique si dispone de resultados. Sin resultados no significa que se haya inspeccionado ni que no existan incidencias.",
+              "opciones": [
+                "Sin resultados de inspección",
+                "Información parcial por verificar",
+                "Resultados documentados disponibles"
+              ],
+              "valores_sin_resultados": [
+                "Sin resultados de inspección"
+              ]
+            }
+          },
+          {
+            "id": "7645c4e9-eb86-4572-a308-1170ddfe45b7",
+            "clave": "lugar_inspeccion",
+            "orden": 2,
+            "activo": true,
+            "etiqueta": "Lugar o elemento a inspeccionar",
+            "tipo_dato": "text",
+            "obligatorio": false,
+            "plantilla_id": "c3e99fe3-1907-426a-a690-cd92ce0ada6d",
+            "configuracion": {
+              "ayuda": "Opcional. Identifique el lugar solo si lo conoce. Su identificación no acredita una visita ni su estado."
+            }
+          },
+          {
+            "id": "73750ce3-bc49-4c65-ab9d-c9ac0da2f3c3",
+            "clave": "fecha_inspeccion",
+            "orden": 3,
+            "activo": true,
+            "etiqueta": "Fecha de la inspección realizada, si se conoce",
+            "tipo_dato": "date",
+            "obligatorio": false,
+            "plantilla_id": "c3e99fe3-1907-426a-a690-cd92ce0ada6d",
+            "configuracion": {
+              "ayuda": "Opcional. Registre la fecha solo si la inspección ocurrió y está documentada. No ingrese una fecha supuesta."
+            }
+          },
+          {
+            "id": "089f3120-5be5-4fcc-a108-37df1a68ebe8",
+            "clave": "alcance_solicitado",
+            "orden": 4,
+            "activo": true,
+            "etiqueta": "Aspectos que se solicita verificar",
+            "tipo_dato": "textarea",
+            "obligatorio": false,
+            "plantilla_id": "c3e99fe3-1907-426a-a690-cd92ce0ada6d",
+            "configuracion": {
+              "ayuda": "Opcional. Indique qué se necesita inspeccionar. Una petición de comprobación no es un hallazgo."
+            }
+          },
+          {
+            "id": "e2a030b6-72f9-415e-bed4-42dcf11c769d",
+            "clave": "resultados_observados",
+            "orden": 5,
+            "activo": true,
+            "etiqueta": "Observaciones y resultados documentados",
+            "tipo_dato": "textarea",
+            "obligatorio": false,
+            "plantilla_id": "c3e99fe3-1907-426a-a690-cd92ce0ada6d",
+            "configuracion": {
+              "ayuda": "Opcional. Aporte hechos observados, quién o qué documento los respalda y sus límites. Si no dispone de resultados, deje este campo vacío; no redacte hallazgos ni conclusiones anticipados.",
+              "rol_fuente": "hechos"
+            }
+          },
+          {
+            "id": "4739b8c0-4dd9-4967-a512-bb8ff8b95a64",
+            "clave": "referencias_conocidas",
+            "orden": 6,
+            "activo": true,
+            "etiqueta": "Actas, documentos y referencias disponibles",
+            "tipo_dato": "textarea",
+            "obligatorio": false,
+            "plantilla_id": "c3e99fe3-1907-426a-a690-cd92ce0ada6d",
+            "configuracion": {
+              "ayuda": "Opcional. Identifique documentos, enlaces o extractos que conoce. Un enlace o número no acredita su contenido ni su vigencia; NAXJI no consulta automáticamente esas fuentes.",
+              "rol_fuente": "referencias"
+            }
+          },
+          {
+            "id": "28a8abf0-3d29-45f3-a6ef-2bf774cc339a",
+            "clave": "informacion_pendiente",
+            "orden": 7,
+            "activo": true,
+            "etiqueta": "Información y evidencias pendientes",
+            "tipo_dato": "textarea",
+            "obligatorio": false,
+            "plantilla_id": "c3e99fe3-1907-426a-a690-cd92ce0ada6d",
+            "configuracion": {
+              "ayuda": "Opcional. Señale observaciones, mediciones o evidencias que aún deben obtenerse o verificarse."
+            }
+          }
+        ],
+        "nombre": "Informe de Inspección – Piloto NAXJI",
+        "area_id": "1973fec4-ba92-42e5-9de5-994dcd0c674b",
+        "version": 1,
+        "area_activa": true,
+        "area_codigo": "MDT_SGGA",
+        "area_nombre": "Subgerencia de Gestión Ambiental",
+        "descripcion": "DEMOSTRACIÓN de inspección ambiental. No constituye un formato municipal oficial. El funcionario aporta datos fuente; Ollama propone el borrador. Sin resultados, actuaciones, hallazgos y conclusiones quedan pendientes de verificación. Revisión humana obligatoria.",
+        "tipo_activo": true,
+        "tipo_codigo": "INFORME_INSPECCION",
+        "tipo_nombre": "Informe de Inspección",
+        "tipo_informe_id": "668a217a-8f4f-47d6-99d8-0a7ab8661ea6",
+        "secciones_salida": [
+          {
+            "clave": "antecedentes",
+            "titulo": "Antecedentes de la solicitud",
+            "obligatoria": true
+          },
+          {
+            "clave": "objetivo",
+            "titulo": "Objetivo y alcance de la inspección",
+            "obligatoria": true
+          },
+          {
+            "clave": "actuaciones",
+            "titulo": "Actuaciones y fuentes disponibles",
+            "obligatoria": true
+          },
+          {
+            "clave": "hallazgos",
+            "titulo": "Hallazgos y observaciones",
+            "obligatoria": true
+          },
+          {
+            "clave": "conclusiones",
+            "titulo": "Conclusiones",
+            "obligatoria": true
+          },
+          {
+            "clave": "recomendaciones",
+            "titulo": "Recomendaciones y verificaciones pendientes",
+            "obligatoria": false
+          }
+        ]
+      }
+    ],
+    "columnas": [
+      [
+        "plantillas",
+        "secciones_salida"
+      ],
+      [
+        "versiones_informe",
+        "secciones_salida"
+      ],
+      [
+        "versiones_informe",
+        "titulo"
+      ]
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "entorno": "PostgreSQL aislado en loopback; identidad de prueba inyectada; sklearn y Ollama reales; sin Supabase",
+  "modelo": "qwen2.5:7b",
+  "generacion_segundos": 4.448,
+  "plantilla_version": 2,
+  "solicitud_id": "0f3b8138-cb49-4fb9-95bf-a837dc3b2c96",
+  "informe_id": "59972781-1915-4457-b553-6212d952fac9",
+  "datos_fuente": {
+    "estado_resultados": "Sin resultados de inspección"
+  },
+  "secciones": [
+    {
+      "clave": "antecedentes",
+      "titulo": "Antecedentes",
+      "obligatoria": true
+    },
+    {
+      "clave": "objetivo",
+      "titulo": "Objetivo del informe",
+      "obligatoria": true
+    },
+    {
+      "clave": "analisis_tecnico",
+      "titulo": "Análisis técnico",
+      "obligatoria": true
+    },
+    {
+      "clave": "conclusiones",
+      "titulo": "Conclusiones",
+      "obligatoria": true
+    },
+    {
+      "clave": "recomendaciones",
+      "titulo": "Recomendaciones",
+      "obligatoria": false
+    }
+  ],
+  "propuesta": {
+    "objetivo": "El objetivo del informe es evaluar el estado actual del parque ficticio Aurora y proporcionar recomendaciones para su mantenimiento y mejora.",
+    "antecedentes": "Pendiente de verificación: Se solicita un informe técnico para evaluar el estado del parque ficticio Aurora, pero no se han proporcionado resultados de inspección.",
+    "conclusiones": "Pendiente de verificación: No se pueden formular conclusiones sin resultados de inspección.",
+    "recomendaciones": "Pendiente de verificación: Se recomienda recabar información adicional para evaluar el estado del parque ficticio Aurora.",
+    "analisis_tecnico": "Pendiente de verificación: No se han proporcionado resultados de inspección para analizar el estado del parque ficticio Aurora."
+  },
+  "edicion_guardada": {
+    "objetivo": "El objetivo del informe es evaluar el estado actual del parque ficticio Aurora y proporcionar recomendaciones para su mantenimiento y mejora.",
+    "encabezado": {
+      "asunto": "PRUEBA NAXJI V2: solicitud de inspección del parque ficticio Aurora, sin resultados",
+      "autor_id": "7e3a03a4-6d22-4674-a58e-9f5a6a1cbcca",
+      "area_origen": "Alcaldía",
+      "area_destino": "Alcaldía"
+    },
+    "antecedentes": "Pendiente de verificación: Se solicita un informe técnico para evaluar el estado del parque ficticio Aurora, pero no se han proporcionado resultados de inspección.",
+    "conclusiones": "Revisión humana de prueba NAXJI. No se aportaron resultados de inspección.\nPendiente de verificación: observaciones y evidencias del parque ficticio Aurora.",
+    "recomendaciones": "Pendiente de verificación: Se recomienda recabar información adicional para evaluar el estado del parque ficticio Aurora.",
+    "analisis_tecnico": "Pendiente de verificación: No se han proporcionado resultados de inspección para analizar el estado del parque ficticio Aurora."
+  },
+  "http": {
+    "generacion": 201,
+    "edicion": 200,
+    "recuperacion": 200,
+    "descarga": 200
+  },
+  "limites": "Comprobación de este caso ficticio; no certifica ausencia de alucinaciones para cualquier entrada. Revisión humana obligatoria."
+}

@@ -1,5 +1,6 @@
 import api from "./api";
-import { clearSession, endSession, saveUser, startSession, storedUser } from "./session";
+import axios from "axios";
+import { clearSession, endSession, saveUser, startSession, storedUser, revisionSesion } from "./session";
 
 const ROLES_ELABORACION = ["FUNCIONARIO", "ADMINISTRADOR"];
 
@@ -36,19 +37,29 @@ export const USUARIOS_DEMO = [
 export const login = async (credentials) => {
   try {
     await startSession(credentials);
-    const response = await api.get("/auth/me");
-    saveUser(response.data);
-    return response.data;
+    // La ruta protegida consulta /auth/me antes de montar el área privada.
+    // /auth/login ya valida identidad, actividad y roles en el backend real.
   } catch (error) {
     clearSession();
     throw error;
   }
 };
 
-export const obtenerUsuarioActual = async () => {
-  const response = await api.get("/auth/me");
-  saveUser(response.data);
-  return response.data;
+let perfilPendiente = null;
+export const obtenerUsuarioActual = () => {
+  const revision = revisionSesion();
+  if (perfilPendiente?.revision === revision) return perfilPendiente.promise;
+  const consulta = { revision };
+  consulta.promise = api.get("/auth/me").then(({ data }) => {
+    if (revision !== revisionSesion()) throw new axios.CanceledError("La sesión cambió.");
+    saveUser(data);
+    return data;
+  }).finally(() => {
+    if (perfilPendiente === consulta) perfilPendiente = null;
+  });
+  // Comparte solo peticiones simultáneas, sin caché de permisos ni de perfiles.
+  perfilPendiente = consulta;
+  return consulta.promise;
 };
 
 export const logout = endSession;

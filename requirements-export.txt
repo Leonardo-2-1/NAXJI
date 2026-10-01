@@ -1,0 +1,2 @@
+# Exportación local determinista de versiones guardadas. No utiliza Ollama.
+python-docx>=1.2,<2

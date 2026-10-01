@@ -1,0 +1,425 @@
+{
+  "phase": "antes",
+  "mode": "real",
+  "origin": "http://localhost:5174",
+  "scope": "React DOM sin motor visual; HTTP real, sin predicción/generación ni escritura de solicitudes",
+  "runs": [
+    {
+      "anonymous": {
+        "ms": 71,
+        "requests": [
+          {
+            "method": "get",
+            "path": "/auth/config",
+            "status": 200,
+            "ms": 14,
+            "start_ms": 18,
+            "end_ms": 32
+          },
+          {
+            "method": "post",
+            "path": "/auth/refresh",
+            "status": 401,
+            "ms": 4,
+            "start_ms": 33,
+            "end_ms": 36
+          },
+          {
+            "method": "post",
+            "path": "/auth/refresh",
+            "status": 401,
+            "ms": 3,
+            "start_ms": 37,
+            "end_ms": 40
+          }
+        ]
+      },
+      "login": {
+        "ms": 10621,
+        "report_visible_ms": 7505,
+        "requests": [
+          {
+            "method": "post",
+            "path": "/auth/login",
+            "status": 200,
+            "ms": 3316,
+            "start_ms": 2,
+            "end_ms": 3318
+          },
+          {
+            "method": "get",
+            "path": "/auth/me",
+            "status": 200,
+            "ms": 2120,
+            "start_ms": 3318,
+            "end_ms": 5438
+          },
+          {
+            "method": "get",
+            "path": "/auth/me",
+            "status": 200,
+            "ms": 1945,
+            "start_ms": 5478,
+            "end_ms": 7423
+          },
+          {
+            "method": "get",
+            "path": "/auth/me",
+            "status": 200,
+            "ms": 2008,
+            "start_ms": 5478,
+            "end_ms": 7486
+          },
+          {
+            "method": "get",
+            "path": "/areas",
+            "status": 200,
+            "ms": 3079,
+            "start_ms": 7504,
+            "end_ms": 10583
+          },
+          {
+            "method": "get",
+            "path": "/tipos-informe",
+            "status": 200,
+            "ms": 3086,
+            "start_ms": 7504,
+            "end_ms": 10590
+          }
+        ]
+      },
+      "recovery": {
+        "ms": 7392,
+        "report_visible_ms": 4274,
+        "requests": [
+          {
+            "method": "get",
+            "path": "/auth/config",
+            "status": 200,
+            "ms": 4,
+            "start_ms": 2,
+            "end_ms": 6
+          },
+          {
+            "method": "post",
+            "path": "/auth/refresh",
+            "status": 200,
+            "ms": 2368,
+            "start_ms": 7,
+            "end_ms": 2375
+          },
+          {
+            "method": "get",
+            "path": "/auth/me",
+            "status": 200,
+            "ms": 1865,
+            "start_ms": 2375,
+            "end_ms": 4240
+          },
+          {
+            "method": "get",
+            "path": "/auth/me",
+            "status": 200,
+            "ms": 1899,
+            "start_ms": 2375,
+            "end_ms": 4273
+          },
+          {
+            "method": "get",
+            "path": "/areas",
+            "status": 200,
+            "ms": 2955,
+            "start_ms": 4273,
+            "end_ms": 7228
+          },
+          {
+            "method": "get",
+            "path": "/tipos-informe",
+            "status": 200,
+            "ms": 3092,
+            "start_ms": 4273,
+            "end_ms": 7365
+          }
+        ]
+      }
+    },
+    {
+      "anonymous": {
+        "ms": 46,
+        "requests": [
+          {
+            "method": "get",
+            "path": "/auth/config",
+            "status": 200,
+            "ms": 4,
+            "start_ms": 3,
+            "end_ms": 6
+          },
+          {
+            "method": "post",
+            "path": "/auth/refresh",
+            "status": 401,
+            "ms": 3,
+            "start_ms": 7,
+            "end_ms": 9
+          },
+          {
+            "method": "post",
+            "path": "/auth/refresh",
+            "status": 401,
+            "ms": 3,
+            "start_ms": 9,
+            "end_ms": 12
+          }
+        ]
+      },
+      "login": {
+        "ms": 9515,
+        "report_visible_ms": 6322,
+        "requests": [
+          {
+            "method": "post",
+            "path": "/auth/login",
+            "status": 200,
+            "ms": 2449,
+            "start_ms": 2,
+            "end_ms": 2451
+          },
+          {
+            "method": "get",
+            "path": "/auth/me",
+            "status": 200,
+            "ms": 1801,
+            "start_ms": 2451,
+            "end_ms": 4253
+          },
+          {
+            "method": "get",
+            "path": "/auth/me",
+            "status": 200,
+            "ms": 2009,
+            "start_ms": 4277,
+            "end_ms": 6285
+          },
+          {
+            "method": "get",
+            "path": "/auth/me",
+            "status": 200,
+            "ms": 2018,
+            "start_ms": 4277,
+            "end_ms": 6295
+          },
+          {
+            "method": "get",
+            "path": "/areas",
+            "status": 200,
+            "ms": 3172,
+            "start_ms": 6321,
+            "end_ms": 9494
+          },
+          {
+            "method": "get",
+            "path": "/tipos-informe",
+            "status": 200,
+            "ms": 3180,
+            "start_ms": 6321,
+            "end_ms": 9501
+          }
+        ]
+      },
+      "recovery": {
+        "ms": 7252,
+        "report_visible_ms": 4061,
+        "requests": [
+          {
+            "method": "get",
+            "path": "/auth/config",
+            "status": 200,
+            "ms": 3,
+            "start_ms": 1,
+            "end_ms": 5
+          },
+          {
+            "method": "post",
+            "path": "/auth/refresh",
+            "status": 200,
+            "ms": 2289,
+            "start_ms": 5,
+            "end_ms": 2294
+          },
+          {
+            "method": "get",
+            "path": "/auth/me",
+            "status": 200,
+            "ms": 1754,
+            "start_ms": 2295,
+            "end_ms": 4049
+          },
+          {
+            "method": "get",
+            "path": "/auth/me",
+            "status": 200,
+            "ms": 1949,
+            "start_ms": 2294,
+            "end_ms": 4243
+          },
+          {
+            "method": "get",
+            "path": "/areas",
+            "status": 200,
+            "ms": 3120,
+            "start_ms": 4059,
+            "end_ms": 7180
+          },
+          {
+            "method": "get",
+            "path": "/tipos-informe",
+            "status": 200,
+            "ms": 3180,
+            "start_ms": 4059,
+            "end_ms": 7239
+          }
+        ]
+      }
+    },
+    {
+      "anonymous": {
+        "ms": 37,
+        "requests": [
+          {
+            "method": "get",
+            "path": "/auth/config",
+            "status": 200,
+            "ms": 3,
+            "start_ms": 2,
+            "end_ms": 6
+          },
+          {
+            "method": "post",
+            "path": "/auth/refresh",
+            "status": 401,
+            "ms": 3,
+            "start_ms": 6,
+            "end_ms": 9
+          },
+          {
+            "method": "post",
+            "path": "/auth/refresh",
+            "status": 401,
+            "ms": 5,
+            "start_ms": 9,
+            "end_ms": 14
+          }
+        ]
+      },
+      "login": {
+        "ms": 9330,
+        "report_visible_ms": 6075,
+        "requests": [
+          {
+            "method": "post",
+            "path": "/auth/login",
+            "status": 200,
+            "ms": 2425,
+            "start_ms": 1,
+            "end_ms": 2427
+          },
+          {
+            "method": "get",
+            "path": "/auth/me",
+            "status": 200,
+            "ms": 1701,
+            "start_ms": 2427,
+            "end_ms": 4128
+          },
+          {
+            "method": "get",
+            "path": "/auth/me",
+            "status": 200,
+            "ms": 1892,
+            "start_ms": 4152,
+            "end_ms": 6044
+          },
+          {
+            "method": "get",
+            "path": "/auth/me",
+            "status": 200,
+            "ms": 2009,
+            "start_ms": 4152,
+            "end_ms": 6160
+          },
+          {
+            "method": "get",
+            "path": "/areas",
+            "status": 200,
+            "ms": 3129,
+            "start_ms": 6073,
+            "end_ms": 9202
+          },
+          {
+            "method": "get",
+            "path": "/tipos-informe",
+            "status": 200,
+            "ms": 3226,
+            "start_ms": 6073,
+            "end_ms": 9298
+          }
+        ]
+      },
+      "recovery": {
+        "ms": 7372,
+        "report_visible_ms": 4239,
+        "requests": [
+          {
+            "method": "get",
+            "path": "/auth/config",
+            "status": 200,
+            "ms": 4,
+            "start_ms": 2,
+            "end_ms": 6
+          },
+          {
+            "method": "post",
+            "path": "/auth/refresh",
+            "status": 200,
+            "ms": 2332,
+            "start_ms": 6,
+            "end_ms": 2338
+          },
+          {
+            "method": "get",
+            "path": "/auth/me",
+            "status": 200,
+            "ms": 1867,
+            "start_ms": 2338,
+            "end_ms": 4205
+          },
+          {
+            "method": "get",
+            "path": "/auth/me",
+            "status": 200,
+            "ms": 1884,
+            "start_ms": 2338,
+            "end_ms": 4222
+          },
+          {
+            "method": "get",
+            "path": "/tipos-informe",
+            "status": 200,
+            "ms": 2975,
+            "start_ms": 4238,
+            "end_ms": 7213
+          },
+          {
+            "method": "get",
+            "path": "/areas",
+            "status": 200,
+            "ms": 3099,
+            "start_ms": 4238,
+            "end_ms": 7338
+          }
+        ]
+      }
+    }
+  ]
+}

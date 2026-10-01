@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import "../styles/nuevoInforme.css";
 import { useLocation } from "react-router-dom";
 import EditorBorrador from "../components/EditorBorrador";
+import VistaPreviaInforme from "../components/VistaPreviaInforme";
 import NormativasSugeridas from "../components/NormativasSugeridas";
 import PasosInforme from "../components/PasosInforme";
 import { progresoInforme } from "../services/progresoInforme";
 import { seccionesDePlantilla, validarSeccionesBorrador } from "../services/estructuraBorrador";
+import { datosOficiales, plantillaPosterior } from "../services/encabezadoDocumento";
 
 import { mensajeError } from "../services/api";
 import { puedeElaborar, obtenerUsuarioGuardado } from "../services/authService";
 import { obtenerAreas, obtenerCamposPlantilla, obtenerPlantillas, obtenerTiposInforme } from "../services/catalogoService";
-import { guardarBorrador, obtenerInforme } from "../services/informeService";
+import { guardarBorrador, obtenerInforme, obtenerInformePorSolicitud, obtenerVersionInforme,
+  descargarVersionDocx, guardarArchivoDocx } from "../services/informeService";
 import { generarBorrador, predecirContexto, validarPrediccion, obtenerContexto } from "../services/iaService";
 import { actualizarSolicitud, crearSolicitud, obtenerSolicitud, guardarSolicitudCompleta } from "../services/solicitudService";
 import {
@@ -55,9 +59,11 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
   const [avisoPlantilla, setAvisoPlantilla] = useState("");
   const [instrucciones, setInstrucciones] = useState(INSTRUCCIONES);
   const [informe, setInforme] = useState(null);
+  const [versionVista, setVersionVista] = useState(null);
   const [informeId, setInformeId] = useState(informeInicialId);
   const [contenido, setContenido] = useState({});
   const [titulo, setTitulo] = useState("");
+  const [encabezadoOficial, setEncabezadoOficial] = useState(() => datosOficiales(null));
   const [cargando, setCargando] = useState(true);
   const [cargaFallida, setCargaFallida] = useState(false);
   const [operacion, setOperacion] = useState("");
@@ -76,7 +82,11 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
     plantillas, campos, idCampos, estadoPlantillas, solicitud, informe });
   const pasoDisponible = cargando || cargaFallida ? 1 : progreso.pasoDisponible;
   const pasoActual = Math.min(pasoElegido ?? pasoDisponible, pasoDisponible);
-  const titulosPasos = ["Cuéntenos qué necesita", "Revise y confirme la propuesta", "Elija la plantilla y complete los datos", "Revise su borrador"];
+  const titulosPasos = ["Cuéntenos qué necesita", "Revise y confirme la propuesta", "Prepare y revise la propuesta", "Vista previa y descarga"];
+  const cambiosSinGuardar = Boolean(informe) &&
+    (titulo !== (informe.titulo || "") || JSON.stringify(contenido) !== JSON.stringify(informe.contenido) ||
+      JSON.stringify(encabezadoOficial) !== JSON.stringify(datosOficiales(informe.contenido.encabezado)));
+  const posterior = plantillaPosterior(plantillas, form.plantillaId);
   const encabezadoPaso = useRef(null);
 
   useEffect(() => {
@@ -90,7 +100,8 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
     setAvisoPlantilla("");
     try {
       const formatos = (await obtenerPlantillas(actual.tipo_informe_id, opciones))
-        .filter(p => plantillaCompatible(p, actual.tipo_informe_id, actual.area_destino_id));
+        .filter(p => plantillaCompatible(p, actual.tipo_informe_id, actual.area_destino_id))
+        .sort((a, b) => a.nombre.localeCompare(b.nombre) || b.version - a.version);
       if (!vigente()) return;
       setPlantillas(formatos);
       const idAnterior = anterior.plantillaId;
@@ -145,9 +156,10 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
         if (esConfirmada(contexto)) {
           await cargarFormatos(actual, datos, () => activo, opciones);
         }
-        if (activo && actual.estado === "GENERADA" && informeInicialId) {
+        if (activo && actual.estado === "GENERADA") {
           try {
-            const borrador = await obtenerInforme(informeInicialId);
+            const borrador = informeInicialId ? await obtenerInforme(informeInicialId)
+              : await obtenerInformePorSolicitud(actual.id, opciones);
             if (borrador.solicitud_id !== actual.id) throw new Error("El informe no pertenece a esta solicitud.");
             if (activo) mostrarInforme(borrador);
           } catch (err) {
@@ -186,9 +198,11 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
 
   function mostrarInforme(actual) {
     setInforme(actual);
+    setVersionVista(actual);
     setInformeId(actual.informe_id);
     setTitulo(actual.titulo || "");
     setContenido(actual.contenido || {});
+    setEncabezadoOficial(datosOficiales(actual.contenido?.encabezado));
   }
 
 
@@ -327,7 +341,7 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
       await persistirDatos();
       if (vigente()) {
         setMensaje("Datos guardados correctamente. Ya puede generar el borrador.");
-        setPasoElegido(4);
+        setPasoElegido(3);
       }
     });
   }
@@ -346,6 +360,7 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
       const resultado = await generarBorrador(actual.id, instrucciones.trim() || INSTRUCCIONES);
       if (!vigente()) return;
       mostrarInforme(resultado);
+      setPasoElegido(3);
       recordar({ ...actual, estado: "GENERADA" }, resultado.informe_id);
       setMensaje("Borrador generado. Puede editarlo y guardar una nueva versión.");
     } catch (err) {
@@ -367,7 +382,7 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
     if (!elaboracionPermitida || informe?.estado !== "BORRADOR") return;
     ejecutar("editar", async vigente => {
       validarSeccionesBorrador(informe, contenido);
-      const resultado = await guardarBorrador(informe.informe_id, contenido, informe.numero_version, titulo);
+      const resultado = await guardarBorrador(informe.informe_id, contenido, informe.numero_version, titulo, encabezadoOficial);
       if (!vigente()) return;
       mostrarInforme(resultado);
       setMensaje(`Borrador guardado. Versión ${resultado.numero_version}.`);
@@ -385,10 +400,29 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
     });
   }
 
+  function cambiarVersion(numero) {
+    ejecutar("version", async vigente => {
+      const guardada = await obtenerVersionInforme(informe.informe_id, numero);
+      if (vigente()) setVersionVista(guardada);
+    });
+  }
+
+  function descargar() {
+    if (!versionVista) return;
+    ejecutar("descargar", async vigente => {
+      const { informe_id: id, numero_version: numero } = versionVista;
+      const blob = await descargarVersionDocx(id, numero);
+      if (!vigente()) return;
+      guardarArchivoDocx(blob, `NAXJI-${id}-v${numero}.docx`);
+      setMensaje(`Descarga preparada de la versión guardada ${numero}.`);
+    });
+  }
+
   function renderCampo(campo) {
     const props = {
       id: `campo-${campo.id}`, value: form.valores[campo.id] ?? "",
       required: campo.obligatorio,
+      "aria-describedby": campo.configuracion?.ayuda ? `ayuda-${campo.id}` : undefined,
       onChange: e => setForm(prev => ({ ...prev, valores: { ...prev.valores, [campo.id]: e.target.value } })),
     };
     if (campo.tipo_dato === "textarea") return <textarea {...props} rows="4" />;
@@ -420,7 +454,7 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
     <div className="informe-avisos">
     {!elaboracionPermitida && <p className="warning-message">Su rol solo permite consultar. Use un funcionario o administrador para elaborar.</p>}
     {cargando && <p className="informe-carga" role="status">Recuperando catálogos y solicitud…</p>}
-    {ocupado && <p className="informe-carga" role="status">{({ analizar: "Analizando asunto…", confirmar: "Confirmando contexto…", campos: "Cargando campos…", guardar: "Guardando datos…", generar: "Generando borrador… Puede tardar unos minutos.", editar: "Guardando borrador…", abrir: "Recuperando borrador…" })[operacion]}</p>}
+    {ocupado && <p className="informe-carga" role="status">{({ analizar: "Analizando asunto…", confirmar: "Confirmando contexto…", campos: "Cargando campos…", guardar: "Guardando datos…", generar: "Generando borrador… Puede tardar unos minutos.", editar: "Guardando borrador…", abrir: "Recuperando borrador…", version: "Cargando versión guardada…", descargar: "Preparando descarga Word…" })[operacion]}</p>}
     {error && <div className="error-message" role="alert">{error}</div>}
     {cargaFallida && <button type="button" className="btn-secondary" onClick={() => window.location.reload()}>Reintentar carga</button>}
     {mensaje && <div className="success-message" role="status">{mensaje}</div>}
@@ -488,7 +522,7 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
 
     <section id="panel-paso-3" className="informe-panel" hidden={pasoActual !== 3} aria-labelledby="titulo-paso">
       {!contextoVigente ? <p>Confirme el contexto para seleccionar la plantilla y completar sus datos.</p> : <>
-        <p className="card-help">La plantilla define la estructura del documento. Complete los datos que servirán para redactarlo.</p>
+        <p className="card-help">Los campos son datos fuente. Ollama propone las secciones del documento y usted las revisa. Aporte solo lo conocido; los hechos que falten deben quedar pendientes de verificación.</p>
         {estadoPlantillas === "cargando" && <p role="status">Cargando plantillas compatibles y campos…</p>}
         {avisoPlantilla && <p className="warning-message" role="alert">{avisoPlantilla}</p>}
         {estadoPlantillas === "error" && <button type="button" className="btn-secondary" disabled={ocupado}
@@ -498,14 +532,15 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
           <div className="form-group"><label htmlFor="plantilla">Plantilla *</label>
             <select id="plantilla" required value={form.plantillaId} onChange={e => cambiarPlantilla(e.target.value)}>
               <option value="">Seleccione una plantilla</option>
-              {plantillas.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+              {plantillas.map(p => <option key={p.id} value={p.id}>{p.nombre} · versión de plantilla {p.version || 1}</option>)}
             </select>
             <p className="card-help">{plantillas.find(p => p.id === form.plantillaId)?.descripcion}</p>
+            {posterior && <p className="warning-inline">Existe una versión de plantilla más reciente de «{posterior.nombre}»: versión {posterior.version}. Puede seleccionarla para una solicitud nueva; los documentos guardados conservan su estructura.</p>}
             {form.plantillaId && <div className="informe-estructura">
               <h3>Así se organizará su borrador</h3>
               <ol>{seccionesDePlantilla(plantillas.find(p => p.id === form.plantillaId)).map(seccion =>
                 <li key={seccion.clave}>{seccion.titulo}<small>{seccion.obligatoria ? "Obligatoria" : "Opcional"}</small></li>)}</ol>
-              <p className="card-help">Los campos siguientes son los datos de entrada para elaborarlo.</p>
+              <p className="card-help">Estas son secciones de salida propuestas por Ollama. En las plantillas de datos fuente, aporte la fecha y el lugar preciso, observaciones y evidencias disponibles. Si faltan resultados, la propuesta solo podrá indicar cómo verificarlos.</p>
             </div>}
           </div>
           <div className="form-group"><label htmlFor="area-origen">Área de origen *</label>
@@ -517,6 +552,7 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
           {form.plantillaId && idCampos !== form.plantillaId && !ocupado && <button type="button" className="btn-secondary" onClick={() => cambiarPlantilla(form.plantillaId)}>Reintentar carga de campos</button>}
           {campos.map(campo => <div className="form-group" key={campo.id}>
             <label htmlFor={`campo-${campo.id}`}>{campo.etiqueta}{campo.obligatorio ? " *" : ""}</label>{renderCampo(campo)}
+            {campo.configuracion?.ayuda && <p className="hint-text" id={`ayuda-${campo.id}`}>{campo.configuracion.ayuda}</p>}
           </div>)}
           {progreso.plantillaLista && !progreso.datosListos && <p className="informe-pendientes" id="datos-pendientes">
             {!form.areaOrigenId && "Seleccione el área de origen. "}
@@ -525,42 +561,68 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
           </p>}
           <div className="informe-acciones"><button type="button" className="btn-primary" disabled={!progreso.datosListos}
             aria-describedby={progreso.plantillaLista && !progreso.datosListos ? "datos-pendientes" : undefined}
-            onClick={guardarDatos}>Guardar datos y continuar <span aria-hidden="true">→</span></button></div>
+            onClick={guardarDatos}>Guardar datos fuente</button></div>
         </fieldset>
       </>}
-    </section>
-
-    <section id="panel-paso-4" className="informe-panel" hidden={pasoActual !== 4} aria-labelledby="titulo-paso">
+    <div className="informe-propuesta">
+      <h3>{informe ? "Revise y edite la propuesta" : "Generar la propuesta"}</h3>
       {!informe && solicitud?.estado === "PROCESANDO" && <div>
         <p>Hay una generación en curso. Si se interrumpió, puede reintentar cuando venza su tiempo de espera. Se utilizarán los datos ya guardados.</p>
         <button type="button" className="btn-primary" disabled={ocupado || !elaboracionPermitida}
           onClick={reintentarGeneracion}>Reintentar generación</button>
       </div>}
       {!informe && !["GENERADA", "PROCESANDO"].includes(solicitud?.estado) && <fieldset disabled={bloqueada || ocupado || !progreso.datosListos} style={sinBorde}>
-        <div className="informe-nota"><strong>Todo listo para elaborar el borrador.</strong><p>Los datos se guardarán antes de generar. Después podrá revisar cada sección y guardar sus cambios como una nueva versión.</p></div>
+        <div className="informe-nota"><strong>Ollama redacta una propuesta a partir de sus datos.</strong><p>Los datos se guardarán antes de generar. Revise cada afirmación, complete lo pendiente y guarde su edición como una nueva versión.</p></div>
         <div className="form-group">
-        <label htmlFor="instrucciones">Instrucciones para el generador</label>
+        <label htmlFor="instrucciones">Preferencias de redacción (opcional)</label>
         <textarea id="instrucciones" rows="4" value={instrucciones} onChange={e => setInstrucciones(e.target.value)} />
         </div>
         <p className="hint-text">Revise el resultado antes de usarlo. Si falta información, manténgala pendiente de verificación.</p>
-        <div className="informe-acciones"><button type="button" className="btn-primary" onClick={generar}>Generar borrador estructurado</button></div>
+        <div className="informe-acciones"><button type="button" className="btn-primary" onClick={generar}>Generar propuesta con Ollama</button></div>
       </fieldset>}
       {!informe && solicitud?.estado === "GENERADA" && <div>
-        <p>Esta solicitud ya tiene un informe. Para recuperarlo, abra su enlace guardado o ingrese el ID del informe.</p>
+        <p>Esta solicitud ya tiene un informe. Reintente su recuperación o ingrese su ID si conserva el enlace.</p>
+        <button type="button" className="btn-secondary" disabled={ocupado} onClick={() => ejecutar("abrir", async vigente => {
+          const guardado = await obtenerInformePorSolicitud(solicitud.id);
+          if (vigente()) mostrarInforme(guardado);
+        })}>Recuperar borrador guardado</button>
         <div className="form-group"><label htmlFor="informe-id">ID del informe</label>
         <input id="informe-id" value={informeId} onChange={e => setInformeId(e.target.value)} disabled={ocupado} />
         </div><button type="button" className="btn-primary" onClick={abrirInforme} disabled={ocupado}>Abrir borrador</button>
       </div>}
       {informe && <fieldset disabled={ocupado || !elaboracionPermitida || informe.estado !== "BORRADOR"} style={sinBorde}>
-        <div className="informe-version"><strong>Versión {informe.numero_version}</strong><span>{informe.estado}</span></div>
+        <div className="informe-version"><strong>Versión {informe.numero_version} del borrador guardado</strong><span>{informe.estado}</span></div>
+        <p className="hint-text">{informe.plantilla_nombre || "Plantilla histórica"} · Versión de plantilla {informe.plantilla_version ?? "no registrada en este borrador"}</p>
         <p className="hint-text">Informe: <code>{informe.informe_id}</code></p>
         <div className="form-group"><label htmlFor="titulo">Título</label>
           <input id="titulo" value={titulo} onChange={e => setTitulo(e.target.value)} />
         </div>
         <EditorBorrador informe={informe} contenido={contenido}
+          encabezadoOficial={encabezadoOficial}
+          onEncabezadoChange={(clave, valor) => setEncabezadoOficial(prev => ({ ...prev, [clave]: valor }))}
           onChange={(clave, valor) => setContenido(prev => ({ ...prev, [clave]: valor }))} />
         <div className="informe-acciones"><button type="button" className="btn-primary" onClick={guardarEdicion}>Guardar borrador</button></div>
       </fieldset>}
+      {cambiosSinGuardar && <p className="warning-inline" role="status">Hay cambios sin guardar. La vista previa y el Word muestran únicamente la versión guardada.</p>}
+    </div>
+    </section>
+    <section id="panel-paso-4" className="informe-panel" hidden={pasoActual !== 4} aria-labelledby="titulo-paso">
+      {!informe ? <p>Genere y guarde un borrador en el paso 3 para disponer de la vista previa.</p> : <>
+        <p className="card-help">Vista del contenido guardado, en el orden de sus secciones. La paginación de Word puede variar. Descargar no vuelve a generar ni modifica el borrador.</p>
+        {cambiosSinGuardar && <p className="warning-inline" role="status">Hay cambios sin guardar en el paso 3. No se incluirán en esta vista ni en la descarga.</p>}
+        <div className="form-group"><label htmlFor="version-vista">Versión guardada para consultar y descargar</label>
+          <select id="version-vista" value={versionVista?.numero_version || informe.numero_version} disabled={ocupado}
+            onChange={e => cambiarVersion(Number(e.target.value))}>
+            {Array.from({ length: informe.numero_version }, (_, i) => i + 1).reverse().map(n =>
+              <option value={n} key={n}>Versión {n}{n === informe.numero_version ? " · última recuperada" : " · anterior"}</option>)}
+          </select>
+        </div>
+        {versionVista && <>
+          <div className="informe-acciones"><button type="button" className="btn-primary" disabled={ocupado}
+            onClick={descargar}>Descargar DOCX · versión {versionVista.numero_version}</button></div>
+          <VistaPreviaInforme informe={versionVista} />
+        </>}
+      </>}
     </section>
     <div className="informe-navegacion">
       <span>{pasoActual === 1 ? "Comience por el asunto" : `Paso ${pasoActual} de 4`}</span>
@@ -568,8 +630,8 @@ function FormularioInforme({ solicitudId, informeInicialId }) {
         onClick={() => setPasoElegido(pasoActual - 1)}><span aria-hidden="true">← </span>Volver</button>}
       {pasoActual < pasoDisponible && pasoActual !== 3 && <button type="button" className="btn-secondary" disabled={ocupado || cargando}
         onClick={() => setPasoElegido(pasoActual + 1)}>Continuar <span aria-hidden="true">→</span></button>}
-      {pasoActual === 3 && (informe || ["GENERADA", "PROCESANDO"].includes(solicitud?.estado)) &&
-        <button type="button" className="btn-secondary" disabled={ocupado} onClick={() => setPasoElegido(4)}>Volver al borrador →</button>}
+      {pasoActual === 3 && informe &&
+        <button type="button" className="btn-secondary" disabled={ocupado} onClick={() => setPasoElegido(4)}>Ver versión guardada →</button>}
       </div>
     </div>
     </div>

@@ -11,6 +11,7 @@ from src.domain.services.errores import ConflictoEstado, DatosInvalidos
 from src.domain.services.informe_service import validar_contenido
 from src.domain.value_objects.estados import EstadoInforme, OrigenVersion
 from src.domain.value_objects.seccion_salida import CLAVES_TECNICAS, secciones_efectivas
+from src.domain.value_objects.encabezado_documento import actualizar_datos_oficiales
 
 
 class ActualizarBorrador:
@@ -18,7 +19,7 @@ class ActualizarBorrador:
         self.s, self.informes = servicios, informes
 
     def ejecutar(self, informe_id: UUID, usuario: UsuarioActual, contenido: dict,
-                numero_version: int, titulo: str | None = None):
+                numero_version: int, titulo: str | None = None, encabezado_oficial: dict | None = None):
         autorizar(usuario, escritura=True)
         if titulo is not None and not titulo.strip():
             raise DatosInvalidos("El título no puede estar vacío")
@@ -41,11 +42,15 @@ class ActualizarBorrador:
                 if clave in contenido and contenido[clave] != valor:
                     raise DatosInvalidos(f"El dato {clave} es de solo lectura")
             contenido = {**deepcopy(protegido), **contenido}
-            informe.versiones.append(VersionInforme(
-                informe.id, anterior.numero_version + 1, contenido, OrigenVersion.USUARIO, usuario.id,
-                secciones_salida=deepcopy(anterior.secciones_salida),
-            ))
+            if encabezado_oficial is not None:
+                contenido["encabezado"] = actualizar_datos_oficiales(
+                    anterior.contenido.get("encabezado"), encabezado_oficial)
             if titulo is not None:
                 informe.titulo = titulo.strip()
+            informe.versiones.append(VersionInforme(
+                informe.id, anterior.numero_version + 1, contenido, OrigenVersion.USUARIO, usuario.id,
+                titulo=informe.titulo,
+                secciones_salida=deepcopy(anterior.secciones_salida),
+            ))
             informe.updated_at = ahora()
             return self.informes.guardar(informe)

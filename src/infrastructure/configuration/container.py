@@ -16,6 +16,8 @@ from src.application.use_cases.generar_borrador import GenerarBorrador
 from src.application.use_cases.guardar_valores_solicitud import GuardarValoresSolicitud
 from src.application.use_cases.guardar_solicitud_completa import GuardarSolicitudCompleta
 from src.application.use_cases.obtener_informe import ObtenerInforme
+from src.application.use_cases.exportar_informe import ExportarInforme
+from src.adapters.out.documents.exportador_docx import ExportadorDocx
 from src.application.use_cases.obtener_solicitud import ObtenerSolicitud
 from src.application.use_cases.obtener_contexto import ObtenerContexto
 from src.application.use_cases.predecir_contexto import PredecirContexto
@@ -126,6 +128,8 @@ class Container:
             self.servicios,
             self.informes
         )
+
+        self.exportar_informe = ExportarInforme(self.obtener_informe, ExportadorDocx())
 
         self.consultar_catalogos = ConsultarCatalogos(
             self.catalogos,

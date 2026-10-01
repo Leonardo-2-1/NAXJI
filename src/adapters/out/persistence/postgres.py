@@ -242,7 +242,8 @@ class InformeRepositoryPostgres(Repository, InformeRepository):
             for version in informe.versiones:
                 if version.id not in existing:
                     save(c, "versiones_informe", version, json_fields=("contenido",), insert_only=True)
-        return informe
+            # El trigger fija updated_at; responder con lo efectivamente guardado.
+            return self.load(c, c.execute("SELECT * FROM public.informes WHERE id=%s", (informe.id,)).fetchone())
 
     @staticmethod
     def load(c, row):

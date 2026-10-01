@@ -1,12 +1,17 @@
 import { Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
 
 import Login from "./pages/Login";
-import NuevoInforme from "./pages/NuevoInforme";
 import MainLayout from "./layouts/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import EstadoAcceso, { LimiteCarga } from "./components/EstadoAcceso";
+import { cargarFormulario } from "./services/cargarFormulario";
 
 import "./styles/app.css";
-import "./styles/nuevoInforme.css";
+import "./styles/identidad.css";
+import "./styles/acceso.css";
+
+const NuevoInforme = lazy(cargarFormulario);
 
 function App() {
   return (
@@ -16,7 +21,11 @@ function App() {
       <Route
         element={
           <ProtectedRoute>
-            <MainLayout />
+            <LimiteCarga>
+              <Suspense fallback={<EstadoAcceso>Cargando el formulario de informes…</EstadoAcceso>}>
+                <MainLayout />
+              </Suspense>
+            </LimiteCarga>
           </ProtectedRoute>
         }
       >

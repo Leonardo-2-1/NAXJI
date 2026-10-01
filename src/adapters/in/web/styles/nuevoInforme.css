@@ -1,10 +1,5 @@
 /* Layout compartido: una sola cabecera y una sola navegación. */
 .app-container {
-  --ink: #162e34;
-  --muted: #50656b;
-  --line: #d8e4e4;
-  --teal: #006b60;
-  --mint: #55e5bf;
   background: #f1f6f5;
   color: var(--ink);
   line-height: 1.6;
@@ -228,3 +223,17 @@
 @media (prefers-reduced-motion: reduce) {
   .nuevo-informe-page button { transition: none; }
 }
+
+/* Propuesta editable y representación de una versión guardada. */
+.informe-propuesta { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+.informe-documento { margin-top: 1.5rem; padding: clamp(1rem, 4vw, 3rem); border: 1px solid var(--line); background: white; color: #172e34; box-shadow: 0 5px 22px #102c320a; overflow-wrap: anywhere; }
+.informe-documento > header { margin-bottom: 1.75rem; }
+.informe-documento h2 { font-size: clamp(1.3rem, 3vw, 1.8rem); line-height: 1.35; }
+.informe-documento h3 { margin-top: 1.5rem; margin-bottom: .6rem; }
+.informe-documento dl { margin: 0; }
+.informe-documento dd { margin: 0 0 .6rem; }
+.informe-texto-guardado { white-space: pre-wrap; }
+.informe-encabezado { margin-bottom: 1.5rem; overflow-wrap: anywhere; }
+.informe-encabezado-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 0 1rem; }
+.informe-encabezado dt { font-weight: 600; }
+.informe-encabezado dd { margin: .2rem 0 .65rem; white-space: pre-wrap; }

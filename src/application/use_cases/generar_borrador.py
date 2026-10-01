@@ -17,6 +17,7 @@ from src.domain.services.solicitud_service import SolicitudService
 from src.domain.value_objects.estado_solicitud import EstadoSolicitud
 from src.domain.value_objects.estados import OrigenVersion, ResultadoValidacion
 from src.domain.value_objects.seccion_salida import secciones_efectivas
+from src.domain.value_objects.encabezado_documento import crear_encabezado
 from src.application.use_cases.verificar_referencias_normativas import verificar_referencias_normativas
 
 
@@ -134,12 +135,8 @@ class GenerarBorrador:
             if resultado.contenido.keys() - {s.clave for s in secciones}:
                 raise DatosInvalidos("El generador devolvió secciones ajenas a la plantilla")
             contenido = {s.clave: resultado.contenido[s.clave] for s in secciones if s.clave in resultado.contenido}
-            contenido["encabezado"] = {
-                "asunto": solicitud.asunto,
-                "area_origen": areas.get(solicitud.area_origen_id),
-                "area_destino": areas.get(solicitud.area_destino_id),
-                "autor_id": str(solicitud.usuario_id),
-            }
+            contenido["encabezado"] = crear_encabezado(
+                solicitud.asunto, plantilla, contexto, areas.get(solicitud.area_origen_id))
             with self.s.uow.transaccion():
                 actual = self.s.obtener(solicitud.id, usuario, escritura=True)
                 if not self._mismo_intento(actual, solicitud) or self._vencida(actual):
@@ -153,13 +150,15 @@ class GenerarBorrador:
                     raise ConflictoEstado("La solicitud, el contexto o la plantilla cambiaron durante la generación; reintente")
                 verificar_referencias_normativas(self.s.catalogos, prediccion,
                                                 {n.normativa_id for n in prediccion.normativas if n.aceptada})
-                informe = Informe(actual.id, plantilla.id, usuario.id, titulo=actual.asunto)
+                # El asunto puede ser una orden de trabajo; no es el título del documento.
+                informe = Informe(actual.id, plantilla.id, usuario.id, titulo=contexto.tipo_informe_nombre or "Informe")
                 informe.versiones.append(VersionInforme(
                     informe.id, 1, contenido, OrigenVersion.IA, usuario.id,
                     modelo_ia=resultado.modelo_ia, prompt_version=resultado.prompt_version,
+                    titulo=informe.titulo,
                     secciones_salida=deepcopy(secciones),
                 ))
-                self.informes.guardar(informe)
+                informe = self.informes.guardar(informe)
                 actual.estado = EstadoSolicitud.GENERADA
                 self.s.guardar(actual)
                 return informe

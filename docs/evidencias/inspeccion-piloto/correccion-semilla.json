@@ -1,0 +1,54 @@
+{
+  "fecha_utc": "2026-10-01T18:00:52.019747+00:00",
+  "comparacion_supabase": {
+    "integra": true,
+    "diferencias": [],
+    "transaction_read_only": "on",
+    "fuente": "comparacion-supabase.json"
+  },
+  "semilla": {
+    "definicion_identica_anterior": true,
+    "sql_anterior_sha256": "84db751b9f8c7ab6bc5ef0eb3304ed8c3b0699fee43e0a64e601769264595136",
+    "sql_corregido_sha256": "804a95858ff202173b20749f5586a58dcd5305479156311211a885b4e12b55d0",
+    "formato": "Una sentencia DO, variables locales, sin tablas temporales ni COMMIT interno",
+    "supabase_ejecutada": false
+  },
+  "pruebas": {
+    "comando": "NAXJI_TEST_PG_PORT=55433 NAXJI_RUN_DB_TESTS=0 NAXJI_RUN_OLLAMA_TESTS=0 python -m pytest -q tests/test_inspeccion_semilla.py tests/test_inspeccion_piloto.py",
+    "aprobadas": 35,
+    "omitidas": 1,
+    "segundos": 22.5,
+    "omision": "Integracion Ollama real optativa; no necesaria para corregir el SQL",
+    "casos": [
+      "42P01 reproducido con tabla temporal ON COMMIT DROP en autocommit",
+      "Instalacion inicial atomica",
+      "Repeticion sin cambios entre conexiones y transacciones",
+      "Rollback de transaccion externa",
+      "Fallo al insertar campos revierte plantilla completa",
+      "18 definiciones alteradas o incompletas rechazadas sin reparar",
+      "Comparacion incluye campos inactivos y configuracion completa",
+      "Estado, generacion simulada, edicion, recuperacion, DOCX y permisos preservados"
+    ]
+  },
+  "disponibilidad_local": {
+    "backend_8001_health": 200,
+    "auth_config": {
+      "status": 200,
+      "mode": "supabase",
+      "persistence": "postgres"
+    },
+    "ollama_tags": {
+      "status": 200,
+      "qwen2.5:7b": true
+    }
+  },
+  "alcance": "No se ejecuta la semilla ni se inserta, modifica o elimina ningun dato en Supabase. No se repite generacion contra esa base. Sin push.",
+  "archivos_de_esta_correccion": [
+    "database/seeds/20261001_piloto_inspeccion_ambiental.sql",
+    "scripts/verificar_inspeccion_guardada.py",
+    "tests/test_inspeccion_semilla.py",
+    "README.md",
+    "docs/evidencias/inspeccion-piloto/comparacion-supabase.json",
+    "docs/evidencias/inspeccion-piloto/correccion-semilla.json"
+  ]
+}

@@ -16,3 +16,10 @@ class ObtenerInforme:
             raise NoEncontrado("Informe no encontrado")
         self.s.obtener(informe.solicitud_id, usuario)
         return informe
+
+    def por_solicitud(self, solicitud_id: UUID, usuario: UsuarioActual):
+        self.s.obtener(solicitud_id, usuario)
+        informe = self.informes.obtener_por_solicitud(solicitud_id)
+        if informe is None:
+            raise NoEncontrado("Informe no encontrado")
+        return informe

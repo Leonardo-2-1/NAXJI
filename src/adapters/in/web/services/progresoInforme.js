@@ -13,8 +13,9 @@ export function progresoInforme({ form, prediccion, contextoVigente, asuntoPredi
   const datosListos = contextoVigente && Boolean(form.tipoInformeId && form.areaDestinoId && form.areaOrigenId) &&
     plantillaLista && faltantes.length === 0 && valoresValidos;
   // Un documento existente conserva su acceso aunque su plantilla haya sido desactivada.
-  const recuperandoBorrador = Boolean(informe) || ["GENERADA", "PROCESANDO"].includes(solicitud?.estado);
-  const pasoDisponible = recuperandoBorrador || datosListos ? 4 : contextoVigente ? 3 :
+  const recuperandoBorrador = ["GENERADA", "PROCESANDO"].includes(solicitud?.estado);
+  // Generar y editar pertenecen al paso 3. Solo el documento guardado habilita la vista previa.
+  const pasoDisponible = informe ? 4 : recuperandoBorrador || contextoVigente ? 3 :
     prediccion && asuntoPredicho === form.asunto.trim() ? 2 : 1;
   return { pasoDisponible, datosListos, plantillaLista, faltantes, valoresValidos };
 }

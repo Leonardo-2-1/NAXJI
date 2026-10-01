@@ -1,0 +1,105 @@
+{
+  "entorno": "PostgreSQL aislado; identidad ficticia inyectada; sklearn y Ollama reales; sin Supabase",
+  "solicitud_id": "825d161b-ec4d-4cd8-9370-6a210abcb0b4",
+  "informe_id": "cfcc2cc8-aa69-49bc-8c38-903bf0a4d528",
+  "modelo": "qwen2.5:7b",
+  "segundos": 6.66,
+  "asunto": "PRUEBA NAXJI: preparar un informe de inspección sobre una posible acumulación de residuos en un parque del distrito de Huancayo.",
+  "datos_fuente": {
+    "estado_resultados": "Resultados documentados disponibles",
+    "fecha_inspeccion": "2026-09-30",
+    "lugar_inspeccion": "Lugar ficticio de prueba: parque Aurora, entrada norte junto al acceso A, distrito de Huancayo",
+    "alcance_solicitado": "Describir únicamente la observación aportada y proponer su verificación por la unidad competente.",
+    "resultados_observados": "CASO FICTICIO: la ficha E1 del 2026-09-30 registra dos bolsas cerradas junto al acceso A de la entrada norte. No se conoce su contenido, origen ni permanencia. No se evaluó el resto del parque.",
+    "referencias_conocidas": "E1: ficha ficticia de observación del 2026-09-30; extracto aportado: dos bolsas cerradas junto al acceso A. FOTO-E1: referencia a fotografía ficticia, imagen no adjunta ni verificada.",
+    "informacion_pendiente": "Verificar competencia territorial, contenido y permanencia de las bolsas. Contrastar E1 y obtener la fotografía antes de decidir medidas."
+  },
+  "propuesta": {
+    "antecedentes": "Se solicita preparar un informe de inspección sobre una posible acumulación de residuos en un parque del distrito de Huancayo, específicamente en la entrada norte junto al acceso A.",
+    "objetivo": "El objetivo es describir la observación aportada y proponer su verificación por la unidad competente.",
+    "actuaciones": "Se documentó la observación a través de la ficha E1 del 2026-09-30, que registra dos bolsas cerradas junto al acceso A de la entrada norte. No se evaluó el resto del parque.",
+    "hallazgos": "Se observaron dos bolsas cerradas junto al acceso A de la entrada norte del parque Aurora, sin conocer su contenido, origen ni permanencia.",
+    "conclusiones": "Aún no hay hallazgos confirmados con la información aportada, ya que no se conoce el contenido, origen ni permanencia de las bolsas.",
+    "recomendaciones": "Se recomienda verificar la competencia territorial, el contenido y la permanencia de las bolsas. Se debe contrastar la ficha E1 y obtener la fotografía antes de decidir medidas."
+  },
+  "version_guardada": {
+    "informe_id": "cfcc2cc8-aa69-49bc-8c38-903bf0a4d528",
+    "solicitud_id": "825d161b-ec4d-4cd8-9370-6a210abcb0b4",
+    "plantilla_id": "cffa320b-80ed-4dd4-a765-626e993a1333",
+    "titulo": "Informe de Inspección",
+    "titulo_versionado": true,
+    "plantilla_nombre": "Informe de Inspección – Piloto NAXJI",
+    "plantilla_version": 1,
+    "estado": "BORRADOR",
+    "version_id": "15c39476-c647-4645-9a49-ffa9e7694dea",
+    "numero_version": 2,
+    "contenido": {
+      "objetivo": "Describir la observación aportada en E1 y precisar las comprobaciones necesarias antes de decidir una actuación.",
+      "hallazgos": "Se observaron dos bolsas cerradas junto al acceso A de la entrada norte del parque Aurora, sin conocer su contenido, origen ni permanencia.",
+      "encabezado": {
+        "asunto": "PRUEBA NAXJI: preparar un informe de inspección sobre una posible acumulación de residuos en un parque del distrito de Huancayo.",
+        "documento": {
+          "fecha": "",
+          "emisor": "Unidad de prueba NAXJI (ficticia)",
+          "numero": "",
+          "firmante": "",
+          "referencia": "Prueba local; sin expediente oficial",
+          "destinatario": "Subgerencia de Gestión Ambiental",
+          "cargo_firmante": ""
+        },
+        "area_origen": "Subgerencia de Gestión Ambiental",
+        "area_destino": "Subgerencia de Gestión Ambiental",
+        "tipo_documento": "Informe de Inspección",
+        "plantilla_nombre": "Informe de Inspección – Piloto NAXJI",
+        "plantilla_version": 1
+      },
+      "actuaciones": "Se documentó la observación a través de la ficha E1 del 2026-09-30, que registra dos bolsas cerradas junto al acceso A de la entrada norte. No se evaluó el resto del parque.",
+      "antecedentes": "Se solicita preparar un informe de inspección sobre una posible acumulación de residuos en un parque del distrito de Huancayo, específicamente en la entrada norte junto al acceso A.",
+      "conclusiones": "Según la ficha ficticia E1 aportada, se registran dos bolsas cerradas en la entrada norte, junto al acceso A. Esto no determina su contenido, origen ni permanencia, ni el estado del resto del parque. Se requiere contrastar la fuente y verificar la competencia territorial.\nRevisión humana de prueba: este documento usa datos ficticios y requiere validación antes de cualquier uso.",
+      "recomendaciones": "Se recomienda verificar la competencia territorial, el contenido y la permanencia de las bolsas. Se debe contrastar la ficha E1 y obtener la fotografía antes de decidir medidas."
+    },
+    "secciones_salida": [
+      {
+        "clave": "antecedentes",
+        "titulo": "Antecedentes de la solicitud",
+        "obligatoria": true
+      },
+      {
+        "clave": "objetivo",
+        "titulo": "Objetivo y alcance de la inspección",
+        "obligatoria": true
+      },
+      {
+        "clave": "actuaciones",
+        "titulo": "Actuaciones y fuentes disponibles",
+        "obligatoria": true
+      },
+      {
+        "clave": "hallazgos",
+        "titulo": "Hallazgos y observaciones",
+        "obligatoria": true
+      },
+      {
+        "clave": "conclusiones",
+        "titulo": "Conclusiones",
+        "obligatoria": true
+      },
+      {
+        "clave": "recomendaciones",
+        "titulo": "Recomendaciones y verificaciones pendientes",
+        "obligatoria": false
+      }
+    ],
+    "estructura_legacy": false,
+    "origen": "USUARIO",
+    "modelo_ia": null,
+    "created_at": "2026-10-01T14:24:15.789801-05:00",
+    "updated_at": "2026-10-01T14:24:15.832988-05:00"
+  },
+  "http": {
+    "generacion": 201,
+    "edicion": 200,
+    "recuperacion": 200,
+    "descarga": 200
+  }
+}
