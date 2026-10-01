@@ -7,3 +7,4 @@ scikit-learn==1.6.1
 joblib
 psycopg[binary]>=3.2,<4
 python-dotenv>=1,<2
+python-docx
