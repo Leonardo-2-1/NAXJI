@@ -14,6 +14,11 @@ import httpx
 from src.infrastructure.configuration.database import environment
 
 
+REFRESH_COOKIE = "naxji_refresh"
+# Despliegue temporal pages.dev + railway.app: cookie host-only del backend.
+REFRESH_COOKIE_OPTIONS = {"path": "/", "httponly": True, "secure": True, "samesite": "none"}
+
+
 class AuthError(Exception):
     def __init__(self, status=401, detail="Credenciales o sesión no válidas"):
         self.status, self.detail = status, detail
@@ -26,6 +31,12 @@ class SupabaseAuthSettings:
     publishable_key: str = field(repr=False)
     cookie_secure: bool = True
     allowed_origins: tuple[str, ...] = ("http://127.0.0.1:5173", "http://localhost:5173")
+
+    def __post_init__(self):
+        if self.cookie_secure is not True:
+            raise ValueError("NAXJI_AUTH_COOKIE_SECURE debe ser true: SameSite=None requiere Secure")
+        if any("*" in origin for origin in self.allowed_origins):
+            raise ValueError("Los orígenes de autenticación deben ser explícitos")
 
     @classmethod
     def from_env(cls):

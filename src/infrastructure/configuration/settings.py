@@ -14,6 +14,8 @@ class Settings:
     ollama_timeout_seconds: float = 300.0
 
     def __post_init__(self):
+        if any("*" in origin for origin in self.cors_origins):
+            raise ValueError("NAXJI_CORS_ORIGINS requiere orígenes explícitos, sin comodines")
         try:
             url = urlsplit(self.ollama_base_url)
             valida = (url.scheme in {"http", "https"} and url.hostname and not url.username

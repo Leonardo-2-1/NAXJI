@@ -21,7 +21,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-export.txt
 $env:NAXJI_PERSISTENCE_MODE = 'postgres'
 $env:NAXJI_AUTH_MODE = 'supabase'
-$env:NAXJI_AUTH_COOKIE_SECURE = 'false' # Solo desarrollo HTTP local
+$env:NAXJI_AUTH_COOKIE_SECURE = 'true' # Obligatorio para SameSite=None
 .\.venv\Scripts\python.exe -m uvicorn src.main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -33,6 +33,11 @@ Configure las variables privadas según `.env.example` en su `.env` local exclui
 de Git. No sobrescriba un `.env` existente. PostgreSQL conserva datos al reiniciar.
 En otra terminal: `npm.cmd ci` y `npm.cmd run dev -- --host 127.0.0.1 --port 5173`.
 Abra http://127.0.0.1:5173 e inicie sesión con su cuenta Supabase existente.
+
+La cookie de renovación ahora exige `SameSite=None; Secure; HttpOnly` para el
+[despliegue temporal Pages + Railway](docs/AUTH_PAGES_RAILWAY.md). Para verificar
+sesiones reales localmente, use HTTPS; HTTP puede abrir la interfaz pero no es
+una prueba válida de persistencia de la cookie segura. No configure `Secure=false`.
 
 ## Generación con Ollama local
 

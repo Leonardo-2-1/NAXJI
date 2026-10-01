@@ -2,12 +2,12 @@
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import Field, SecretStr
 
-from src.infrastructure.auth.supabase import AuthError
+from src.infrastructure.auth.supabase import AuthError, REFRESH_COOKIE, REFRESH_COOKIE_OPTIONS
 from ..schemas.base import RequestModel
 
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
-COOKIE = "naxji_refresh"
+COOKIE = REFRESH_COOKIE
 
 
 class LoginRequest(RequestModel):
@@ -52,8 +52,7 @@ def session_response(request, response, session):
         except AuthError:
             pass
         raise AuthError(403, "Perfil inactivo, inexistente o sin permisos asignados")
-    response.set_cookie(COOKIE, refresh, httponly=True, secure=auth.settings.cookie_secure,
-                        samesite="strict", max_age=30 * 24 * 3600, path="/")
+    response.set_cookie(COOKIE, refresh, max_age=30 * 24 * 3600, **REFRESH_COOKIE_OPTIONS)
     response.headers["Cache-Control"] = "no-store"
     return {"access_token": access, "token_type": "bearer", "expires_in": expires}
 
@@ -94,5 +93,5 @@ def logout(request: Request):
         if error.status not in (401, 403):
             raise
     response = Response(status_code=204, headers={"Cache-Control": "no-store"})
-    response.delete_cookie(COOKIE, path="/", httponly=True, secure=auth.settings.cookie_secure, samesite="strict")
+    response.delete_cookie(COOKIE, **REFRESH_COOKIE_OPTIONS)
     return response

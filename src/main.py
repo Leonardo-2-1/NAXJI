@@ -13,7 +13,9 @@ from src.infrastructure.auth.mock import usuarios_demo
 from src.infrastructure.configuration.container import Container
 from src.infrastructure.configuration.settings import Settings
 from src.adapters.out.persistence.postgres import PersistenceError
-from src.infrastructure.auth.supabase import SupabaseAuth, SupabaseAuthSettings, AuthError
+from src.infrastructure.auth.supabase import (
+    SupabaseAuth, SupabaseAuthSettings, AuthError, REFRESH_COOKIE, REFRESH_COOKIE_OPTIONS,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -53,7 +55,7 @@ def create_app(settings: Settings | None = None, container: Container | None = N
             headers["WWW-Authenticate"] = "Bearer"
         response = JSONResponse(status_code=error.status, content={"detail": error.detail}, headers=headers)
         if request.url.path == "/auth/refresh" and error.status in (401, 403):
-            response.delete_cookie("naxji_refresh", path="/")
+            response.delete_cookie(REFRESH_COOKIE, **REFRESH_COOKIE_OPTIONS)
         return response
 
     @app.exception_handler(RequestValidationError)
