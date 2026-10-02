@@ -1,7 +1,24 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from math import isfinite
 from urllib.parse import urlsplit
 from src.infrastructure.configuration.database import environment
+
+
+def validar_conexion_ollama(base_url, username, password):
+    try:
+        url = urlsplit(base_url)
+        valida = (url.scheme in {"http", "https"} and url.hostname
+                  and url.username is None and url.password is None
+                  and not url.query and not url.fragment)
+        _ = url.port
+    except ValueError:
+        valida = False
+    if not valida:
+        raise ValueError("NAXJI_OLLAMA_BASE_URL debe ser una URL HTTP(S) sin credenciales ni query")
+    if bool(username) != bool(password):
+        raise ValueError("NAXJI_OLLAMA_USERNAME y NAXJI_OLLAMA_PASSWORD deben configurarse juntas")
+    if username and ":" in username:
+        raise ValueError("NAXJI_OLLAMA_USERNAME no admite dos puntos en HTTP Basic Authentication")
 
 
 @dataclass(frozen=True)
@@ -12,19 +29,13 @@ class Settings:
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:7b"
     ollama_timeout_seconds: float = 300.0
+    ollama_username: str | None = field(default=None, repr=False)
+    ollama_password: str | None = field(default=None, repr=False)
 
     def __post_init__(self):
         if any("*" in origin for origin in self.cors_origins):
             raise ValueError("NAXJI_CORS_ORIGINS requiere orígenes explícitos, sin comodines")
-        try:
-            url = urlsplit(self.ollama_base_url)
-            valida = (url.scheme in {"http", "https"} and url.hostname and not url.username
-                      and not url.password and not url.query and not url.fragment)
-            _ = url.port
-        except ValueError:
-            valida = False
-        if not valida:
-            raise ValueError("NAXJI_OLLAMA_BASE_URL debe ser una URL HTTP(S) sin credenciales ni query")
+        validar_conexion_ollama(self.ollama_base_url, self.ollama_username, self.ollama_password)
         if not self.ollama_model.strip() or len(self.ollama_model) > 150 or any(c.isspace() for c in self.ollama_model):
             raise ValueError("NAXJI_OLLAMA_MODEL debe identificar un modelo de hasta 150 caracteres")
         if not isfinite(self.ollama_timeout_seconds) or not 1 <= self.ollama_timeout_seconds <= 1800:
@@ -49,4 +60,6 @@ class Settings:
         return cls(auth_mode=modo, cors_origins=origins, persistence_mode=persistence,
                    ollama_base_url=values.get("NAXJI_OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/"),
                    ollama_model=values.get("NAXJI_OLLAMA_MODEL", "qwen2.5:7b"),
-                   ollama_timeout_seconds=timeout)
+                   ollama_timeout_seconds=timeout,
+                   ollama_username=values.get("NAXJI_OLLAMA_USERNAME") or None,
+                   ollama_password=values.get("NAXJI_OLLAMA_PASSWORD") or None)

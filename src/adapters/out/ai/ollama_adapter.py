@@ -4,15 +4,19 @@ import httpx
 
 from src.application.ports.output.llm_port import LLMPort
 from src.domain.services.errores import ErrorGeneracion
+from src.infrastructure.configuration.settings import validar_conexion_ollama
 
 
 class OllamaAdapter(LLMPort):
     def __init__(self, model: str = "qwen2.5:7b", base_url: str = "http://localhost:11434",
-                 timeout_seconds: float = 300.0, *, transport=None):
+                 timeout_seconds: float = 300.0, *, username: str | None = None,
+                 password: str | None = None, transport=None):
+        validar_conexion_ollama(base_url, username, password)
         self._model = model
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
         self.transport = transport
+        self._auth = httpx.BasicAuth(username, password) if username and password else None
 
     @property
     def model(self):
@@ -31,7 +35,7 @@ class OllamaAdapter(LLMPort):
             async with asyncio.timeout(self.timeout_seconds):
                 async with httpx.AsyncClient(
                     timeout=httpx.Timeout(self.timeout_seconds, connect=min(5.0, self.timeout_seconds)),
-                    transport=self.transport, trust_env=False, follow_redirects=False,
+                    transport=self.transport, auth=self._auth, trust_env=False, follow_redirects=False,
                 ) as client:
                     response = await client.post(f"{self.base_url}/api/generate", json=payload)
                     if response.status_code == 404:

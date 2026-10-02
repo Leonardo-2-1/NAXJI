@@ -115,6 +115,7 @@ class Container:
             generador if generador is not None else GeneradorBorradorOllama(OllamaAdapter(
                 model=settings.ollama_model, base_url=settings.ollama_base_url,
                 timeout_seconds=settings.ollama_timeout_seconds,
+                username=settings.ollama_username, password=settings.ollama_password,
             )),
             tiempo_maximo=settings.ollama_timeout_seconds,
         )

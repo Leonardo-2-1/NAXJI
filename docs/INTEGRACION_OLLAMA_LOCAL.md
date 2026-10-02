@@ -13,6 +13,60 @@ entorno del proceso (este último tiene prioridad):
 | `NAXJI_OLLAMA_BASE_URL` | `http://localhost:11434` | HTTP(S), sin usuario, contraseña, query ni fragmento |
 | `NAXJI_OLLAMA_MODEL` | `qwen2.5:7b` | Nombre no vacío, sin espacios, hasta 150 caracteres |
 | `NAXJI_OLLAMA_TIMEOUT_SECONDS` | `300` | Número finito entre 1 y 1800 |
+| `NAXJI_OLLAMA_USERNAME` | Ausente | Opcional; exige también password, no admite dos puntos |
+| `NAXJI_OLLAMA_PASSWORD` | Ausente | Opcional; exige también username |
+
+### Railway hacia Ollama local mediante ngrok protegido
+
+Configure `NAXJI_OLLAMA_BASE_URL` en Railway con la URL **HTTPS** del túnel, sin
+credenciales, query ni fragmento. El adaptador añade `/api/generate`; no añada ese
+endpoint a la URL base. Conserve el modelo y el timeout apropiados para su equipo.
+
+Configure las dos variables de autenticación exclusivamente en las variables
+privadas del servicio backend de Railway, con los valores establecidos en la
+protección HTTP Basic de ngrok. No las configure en Cloudflare Pages, no use el
+prefijo `VITE_`, no las incluya en una URL ni las copie a documentación o logs.
+Reinicie/despliegue el backend tras cambiar sus variables. Este cambio de código
+no configura el túnel ni modifica las variables privadas de Railway.
+
+El backend usa `httpx.BasicAuth` en el cliente HTTP que llama a Ollama; las
+credenciales no forman parte del prompt ni del JSON de generación. Ambas se
+excluyen de la representación de `Settings`. Si solo una tiene valor, el arranque
+falla con un mensaje que identifica las variables, sin mostrar sus valores.
+La misma validación protege las instancias directas del adaptador.
+
+Si ambas están ausentes o vacías, no se envía `Authorization` y se mantiene
+Ollama local sin autenticación. Los valores no se recortan ni interpolan. Se
+conservan `trust_env=False`, la verificación TLS y `follow_redirects=False`:
+una redirección no recibe las credenciales mediante una segunda petición.
+Respuestas 401/403 del túnel producen el error controlado `OLLAMA_ERROR` (502
+desde FastAPI), sin reflejar mensajes del proveedor. No cambia el contrato del
+generador, los puertos de aplicación ni el endpoint `/api/generate`.
+
+Mantenga Ollama y ngrok activos en el equipo local. `localhost` en Railway apunta
+al contenedor de Railway, no al equipo que ejecuta Ollama. Para el túnel público,
+use HTTPS: Basic Auth codifica las credenciales, pero no las cifra por sí mismo.
+Referencia: [autenticación HTTPX](https://www.python-httpx.org/advanced/authentication/).
+
+Las pruebas con `httpx.MockTransport` verifican el envío de autenticación y su
+ausencia, configuración incompleta, errores sin secretos y redirecciones. No
+acreditan conectividad con un túnel real ni disponibilidad del modelo remoto.
+
+### Verificación del soporte Basic Auth — 2026-10-01
+
+| Comprobación ejecutada | Resultado |
+| --- | --- |
+| `pytest tests/test_ollama.py -q -p no:cacheprovider` | 58 aprobadas; 1 advertencia |
+| `pytest -q -rs -p no:cacheprovider --basetemp <directorio temporal nuevo>` | 235 aprobadas, 65 omitidas, 1 advertencia; sin fallos |
+| `npm.cmd run test:frontend` | 51 aprobadas, 0 fallos, 0 omitidas |
+| `npm.cmd run lint` | Código de salida 0 |
+| `npm.cmd run build` | Código de salida 0; 105 módulos transformados |
+| Revisión del bundle React | Sin las variables `NAXJI_OLLAMA_USERNAME` ni `NAXJI_OLLAMA_PASSWORD` |
+
+La advertencia es la deprecación de httpx en TestClient de Starlette. Las 65
+omisiones corresponden a integraciones opt-in con Supabase/Auth real, PostgreSQL
+aislado y Ollama; no se presentan como pruebas aprobadas. No se modificaron
+credenciales ni se ejecutó una inferencia contra un túnel real en esta validación.
 
 No se publican en variables `VITE_`, Swagger ni endpoints de configuración. El
 modelo utilizado sí se registra en `modelo_ia`, como parte de la trazabilidad de
